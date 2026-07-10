@@ -1,8 +1,8 @@
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
-);
+import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 
 import { asyncStoragePersister, QUERY_CACHE_STORAGE_KEY } from './persister';
+
+jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
 describe('asyncStoragePersister', () => {
   it('builds a persister with the expected persist/restore/remove contract', () => {
