@@ -45,7 +45,7 @@ describe('CardListItem', () => {
     const onPress = jest.fn();
     await render(<CardListItem card={makeCard()} onPress={onPress} />);
 
-    fireEvent.press(screen.getByRole('button'));
+    await fireEvent.press(screen.getByRole('button'));
 
     expect(onPress).toHaveBeenCalledTimes(1);
   });

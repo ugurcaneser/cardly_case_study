@@ -48,7 +48,7 @@ describe('HomeScreen', () => {
 
     await renderHome();
 
-    fireEvent.press(screen.getByText('Scan Now'));
+    await fireEvent.press(screen.getByText('Scan Now'));
 
     expect(router.push).toHaveBeenCalledWith('/capture');
   });

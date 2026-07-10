@@ -15,7 +15,7 @@ describe('CaptureTabButton', () => {
   it('navigates to the capture modal when pressed, instead of switching tabs', async () => {
     await render(<CaptureTabButton />);
 
-    fireEvent.press(screen.getByLabelText('Scan a card'));
+    await fireEvent.press(screen.getByLabelText('Scan a card'));
 
     expect(router.push).toHaveBeenCalledWith('/capture');
     expect(router.push).toHaveBeenCalledTimes(1);

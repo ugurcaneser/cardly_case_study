@@ -4,9 +4,9 @@ import type { ReactNode } from 'react';
 import React from 'react';
 
 import { listCards } from '@/src/services/api/cardsClient';
-import { listCollections } from '@/src/services/api/collectionsClient';
+import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 
-import { useCardsQuery, useCollectionsQuery } from './queries';
+import { useCardsQuery, useCollectionsQuery, useCreateCollectionMutation } from './queries';
 
 jest.mock('@/src/services/api/cardsClient');
 jest.mock('@/src/services/api/collectionsClient');
@@ -62,5 +62,38 @@ describe('useCollectionsQuery', () => {
 
     expect(result.current.data).toEqual([{ id: 1, name: 'Vintage', card_count: 0 }]);
     expect(listCollections).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useCreateCollectionMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls createCollection and resolves with the created collection', async () => {
+    (createCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0 });
+
+    const { result } = await renderHook(() => useCreateCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ name: 'Vintage' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(createCollection).toHaveBeenCalledWith({ name: 'Vintage' });
+    expect(result.current.data).toEqual({ id: 1, name: 'Vintage', card_count: 0 });
+  });
+
+  it('surfaces an error when creation fails (e.g. duplicate name)', async () => {
+    (createCollection as jest.Mock).mockRejectedValue(new Error('Collection name already exists'));
+
+    const { result } = await renderHook(() => useCreateCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ name: 'Vintage' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });

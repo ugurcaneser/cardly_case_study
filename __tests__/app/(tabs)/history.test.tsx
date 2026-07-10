@@ -33,7 +33,7 @@ describe('HistoryScreen', () => {
 
     await waitFor(() => expect(screen.getByText('History is empty.')).toBeTruthy());
 
-    fireEvent.press(screen.getByText('Start Scanning'));
+    await fireEvent.press(screen.getByText('Start Scanning'));
     expect(router.push).toHaveBeenCalledWith('/capture');
   });
 
@@ -44,7 +44,7 @@ describe('HistoryScreen', () => {
 
     await waitFor(() => expect(screen.getByText("Couldn't load history")).toBeTruthy());
 
-    fireEvent.press(screen.getByText('Retry'));
+    await fireEvent.press(screen.getByText('Retry'));
     await waitFor(() => expect(listCards).toHaveBeenCalledTimes(2));
   });
 
@@ -56,7 +56,7 @@ describe('HistoryScreen', () => {
 
     await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
 
-    fireEvent.press(screen.getByRole('button'));
+    await fireEvent.press(screen.getByRole('button'));
     expect(router.push).toHaveBeenCalledWith('/card/42');
   });
 });

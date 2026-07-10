@@ -34,7 +34,7 @@ describe('EmptyState', () => {
       <EmptyState icon="clock.fill" title="Empty" actionLabel="Start Scanning" onAction={onAction} />
     );
 
-    fireEvent.press(screen.getByText('Start Scanning'));
+    await fireEvent.press(screen.getByText('Start Scanning'));
 
     expect(onAction).toHaveBeenCalledTimes(1);
   });
