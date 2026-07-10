@@ -22,6 +22,7 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="capture" options={{ presentation: 'modal', title: 'Scan a Card' }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
