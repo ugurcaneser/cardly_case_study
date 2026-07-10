@@ -42,7 +42,7 @@ export default function TabLayout() {
         name="collections"
         options={{
           title: 'Collections',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="square.stack.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="folder.fill" color={color} />,
         }}
       />
     </Tabs>

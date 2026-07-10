@@ -20,6 +20,8 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'clock.fill': 'history',
   'square.stack.fill': 'collections',
+  'folder.fill': 'folder',
+  'dollarsign.circle.fill': 'attach-money',
   'camera.fill': 'camera-alt',
   plus: 'add',
   trash: 'delete',
