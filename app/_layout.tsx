@@ -62,10 +62,6 @@ export default function RootLayout() {
         <ThemeProvider value={NavigationTheme}>
           <Stack screenOptions={{ headerBackTitle: ' ' }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
-            <Stack.Screen
-              name="capture"
-              options={{ presentation: 'modal', headerShown: false }}
-            />
           </Stack>
           <StatusBar style="light" />
         </ThemeProvider>

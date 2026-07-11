@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import CaptureScreen from '@/app/capture';
+import ScanScreen from '@/app/(tabs)/scan';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { createCard } from '@/src/services/api/cardsClient';
@@ -67,12 +67,12 @@ const unrecognizedResult: EnrichResult = {
   timing: { ocrMs: 80, matchMs: 0, totalMs: 80 },
 };
 
-function renderCaptureScreen() {
+function renderScanScreen() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  return render(<CaptureScreen />, { wrapper });
+  return render(<ScanScreen />, { wrapper });
 }
 
 async function captureAPhoto() {
@@ -82,12 +82,12 @@ async function captureAPhoto() {
     assets: [{ uri: 'file:///tmp/photo.jpg' }],
   });
 
-  const result = await renderCaptureScreen();
+  const result = await renderScanScreen();
   await fireEvent.press(screen.getByText('Take Photo'));
   return result;
 }
 
-describe('CaptureScreen', () => {
+describe('ScanScreen', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     useCaptureStore.getState().reset();
@@ -99,32 +99,34 @@ describe('CaptureScreen', () => {
   });
 
   it('renders the idle picker options', async () => {
-    await renderCaptureScreen();
+    await renderScanScreen();
 
     expect(screen.getByText('Take Photo')).toBeTruthy();
     expect(screen.getByText('Choose from Library')).toBeTruthy();
   });
 
-  it('navigates back when the close button is pressed on the idle step', async () => {
-    await renderCaptureScreen();
+  it('resets and returns to Home when the close button is pressed on the idle step', async () => {
+    await renderScanScreen();
 
     await fireEvent.press(screen.getByLabelText('Close'));
 
-    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith('/');
   });
 
-  it('still shows the close button on the captured step', async () => {
+  it('discards the in-progress capture when the close button is pressed on the captured step', async () => {
     await captureAPhoto();
 
     await fireEvent.press(screen.getByLabelText('Close'));
 
-    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith('/');
+    expect(useCaptureStore.getState().step).toBe('idle');
+    expect(useCaptureStore.getState().previewUri).toBeNull();
   });
 
   it('shows an error and never opens the camera when permission is denied', async () => {
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
 
-    await renderCaptureScreen();
+    await renderScanScreen();
     await fireEvent.press(screen.getByText('Take Photo'));
 
     expect(screen.getByText('Camera access is required to scan a card.')).toBeTruthy();
@@ -134,7 +136,7 @@ describe('CaptureScreen', () => {
   it('shows an error and never opens the library when gallery permission is denied', async () => {
     (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
 
-    await renderCaptureScreen();
+    await renderScanScreen();
     await fireEvent.press(screen.getByText('Choose from Library'));
 
     expect(screen.getByText('Photo library access is required to import a card image.')).toBeTruthy();
@@ -145,7 +147,7 @@ describe('CaptureScreen', () => {
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
     (ImagePicker.launchCameraAsync as jest.Mock).mockResolvedValue({ canceled: true, assets: null });
 
-    await renderCaptureScreen();
+    await renderScanScreen();
     await fireEvent.press(screen.getByText('Take Photo'));
 
     expect(screen.getByText('Take Photo')).toBeTruthy();
@@ -172,7 +174,7 @@ describe('CaptureScreen', () => {
       assets: [{ uri: 'file:///tmp/library.jpg' }],
     });
 
-    await renderCaptureScreen();
+    await renderScanScreen();
     await fireEvent.press(screen.getByText('Choose from Library'));
 
     expect(useCaptureStore.getState().previewUri).toBe('file:///tmp/library.jpg');
@@ -185,16 +187,6 @@ describe('CaptureScreen', () => {
 
     expect(screen.getByText('Take Photo')).toBeTruthy();
     expect(useCaptureStore.getState().step).toBe('idle');
-  });
-
-  it('resets the store on unmount, since the native modal gesture is the only way to close it', async () => {
-    const { unmount } = await captureAPhoto();
-    expect(useCaptureStore.getState().step).toBe('captured');
-
-    await act(async () => unmount());
-
-    expect(useCaptureStore.getState().step).toBe('idle');
-    expect(useCaptureStore.getState().previewUri).toBeNull();
   });
 
   it('analyzes the card and shows the matched review view', async () => {
@@ -240,7 +232,7 @@ describe('CaptureScreen', () => {
 
     await fireEvent.press(screen.getByText('Save'));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/12'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/card/12'));
     expect(createCard).toHaveBeenCalledWith({
       status: 'unrecognized',
       thumbnail_base64: 'BASE64DATA',
@@ -260,7 +252,7 @@ describe('CaptureScreen', () => {
     // hint's escalation is purely a function of `step === 'submitting'`, so
     // driving that directly is also the more precise unit boundary - the
     // mutation's success/failure paths are already covered separately above.
-    await renderCaptureScreen();
+    await renderScanScreen();
 
     jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask', 'hrtime', 'performance'] });
     try {
@@ -341,7 +333,7 @@ describe('CaptureScreen', () => {
 
     await fireEvent.press(screen.getByText('Save'));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/7'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/card/7'));
 
     expect(storeCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
     expect(createCard).toHaveBeenCalledWith({
@@ -377,7 +369,7 @@ describe('CaptureScreen', () => {
 
     await fireEvent.press(screen.getByText('Save without Analysis'));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/9'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/card/9'));
 
     expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64DATA' });
     expect(setLocalImageUri).toHaveBeenCalledWith(9, 'file:///document/cards/card-1.jpg');
@@ -399,7 +391,7 @@ describe('CaptureScreen', () => {
     await fireEvent.press(screen.getByText('Save'));
 
     await waitFor(() => expect(screen.getByText('network down')).toBeTruthy());
-    expect(router.replace).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_SAVE_FAILED, { message: 'network down' });
   });
 });

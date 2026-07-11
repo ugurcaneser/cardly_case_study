@@ -48,7 +48,7 @@ export default function HistoryScreen() {
           title="History is empty."
           description="Scan your first card to get started"
           actionLabel="Start Scanning"
-          onAction={() => router.push('/capture')}
+          onAction={() => router.push('/scan')}
         />
       </ThemedView>
     );

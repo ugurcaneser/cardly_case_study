@@ -39,7 +39,7 @@ export default function HomeScreen() {
           <ThemedText type="bodyMd" style={{ color: Colors.onSurfaceVariant }}>
             Identify it and add it to your collection in seconds.
           </ThemedText>
-          <PrimaryButton label="Scan Now" onPress={() => router.push('/capture')} style={styles.heroButton} />
+          <PrimaryButton label="Scan Now" onPress={() => router.push('/scan')} style={styles.heroButton} />
         </BentoCard>
 
         <View style={styles.statsRow}>

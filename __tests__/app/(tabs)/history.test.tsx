@@ -34,7 +34,7 @@ describe('HistoryScreen', () => {
     await waitFor(() => expect(screen.getByText('History is empty.')).toBeTruthy());
 
     await fireEvent.press(screen.getByText('Start Scanning'));
-    expect(router.push).toHaveBeenCalledWith('/capture');
+    expect(router.push).toHaveBeenCalledWith('/scan');
   });
 
   it('shows the error state and retries on demand', async () => {

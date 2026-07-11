@@ -42,7 +42,7 @@ describe('HomeScreen', () => {
     expect(screen.getByText('1')).toBeTruthy();
   });
 
-  it('navigates to the capture modal when "Scan Now" is pressed', async () => {
+  it('navigates to the scan tab when "Scan Now" is pressed', async () => {
     (listCards as jest.Mock).mockResolvedValue([]);
     (listCollections as jest.Mock).mockResolvedValue([]);
 
@@ -50,7 +50,7 @@ describe('HomeScreen', () => {
 
     await fireEvent.press(screen.getByText('Scan Now'));
 
-    expect(router.push).toHaveBeenCalledWith('/capture');
+    expect(router.push).toHaveBeenCalledWith('/scan');
   });
 
   it('renders a Recent Cards section and navigates to a card on press', async () => {
