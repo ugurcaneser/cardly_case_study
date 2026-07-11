@@ -100,7 +100,7 @@ export default function CollectionDetailScreen() {
           <ThemedText style={[styles.actionText, { color: Colors.tint }]}>Rename</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleDelete} accessibilityRole="button">
-          <ThemedText style={[styles.actionText, { color: '#991B1B' }]}>Delete Collection</ThemedText>
+          <ThemedText style={[styles.actionText, { color: Colors.error }]}>Delete Collection</ThemedText>
         </TouchableOpacity>
       </View>
 

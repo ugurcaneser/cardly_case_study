@@ -156,8 +156,8 @@ export default function CardDetailScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} accessibilityRole="button">
-          <IconSymbol name="trash" size={18} color="#991B1B" />
-          <ThemedText style={styles.deleteButtonText} color="#991B1B">
+          <IconSymbol name="trash" size={18} color={Colors.error} />
+          <ThemedText style={styles.deleteButtonText} color={Colors.error}>
             Delete Card
           </ThemedText>
         </TouchableOpacity>
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   errorText: {
-    color: '#991B1B',
+    color: Colors.error,
     textAlign: 'center',
     marginTop: 12,
   },

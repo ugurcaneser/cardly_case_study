@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   errorText: {
-    color: '#991B1B',
+    color: Colors.error,
     fontSize: 13,
   },
   actions: {

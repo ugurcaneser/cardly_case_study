@@ -32,7 +32,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
           style={[styles.button, { backgroundColor: Colors.tint }]}
           onPress={onAction}
           accessibilityRole="button">
-          <ThemedText style={styles.buttonText} color="#fff">
+          <ThemedText style={styles.buttonText} color={Colors.onPrimary}>
             {actionLabel}
           </ThemedText>
         </TouchableOpacity>

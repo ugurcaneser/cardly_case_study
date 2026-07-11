@@ -95,7 +95,7 @@ export function CollectionPickerSheet({ visible, cardId, onClose }: CollectionPi
             style={[styles.doneButton, { backgroundColor: Colors.tint }]}
             onPress={onClose}
             accessibilityRole="button">
-            <ThemedText style={styles.doneButtonText} color="#fff">
+            <ThemedText style={styles.doneButtonText} color={Colors.onPrimary}>
               Done
             </ThemedText>
           </TouchableOpacity>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   errorText: {
-    color: '#991B1B',
+    color: Colors.error,
     textAlign: 'center',
     marginVertical: 16,
   },
