@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
 import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
@@ -25,6 +26,7 @@ const COLD_START_HINT_MS = 5000;
 const COLD_START_SEVERE_HINT_MS = 15000;
 
 export default function CaptureScreen() {
+  const insets = useSafeAreaInsets();
   const step = useCaptureStore((state) => state.step);
   const previewUri = useCaptureStore((state) => state.previewUri);
   const enrichResult = useCaptureStore((state) => state.enrichResult);
@@ -144,9 +146,11 @@ export default function CaptureScreen() {
     reset();
   }
 
+  const containerInsetStyle = { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 };
+
   if (step === 'saving') {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, containerInsetStyle]}>
         <ActivityIndicator size="large" />
         <ThemedText style={styles.savingText}>Saving…</ThemedText>
       </ThemedView>
@@ -155,7 +159,7 @@ export default function CaptureScreen() {
 
   if (step === 'error') {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, containerInsetStyle]}>
         <ThemedText type="subtitle" style={styles.hero}>
           Couldn&apos;t analyze this card
         </ThemedText>
@@ -187,7 +191,7 @@ export default function CaptureScreen() {
 
   if (step === 'submitting') {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, containerInsetStyle]}>
         <ActivityIndicator size="large" />
         <ThemedText style={styles.savingText}>Analyzing your card…</ThemedText>
         {coldStartHintVisible ? (
@@ -204,7 +208,11 @@ export default function CaptureScreen() {
   if (step === 'reviewing' && enrichResult) {
     return (
       <ThemedView style={styles.reviewingContainer}>
-        <ScrollView contentContainerStyle={styles.reviewingContent}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.reviewingContent,
+            { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
+          ]}>
           {enrichResult.status === 'matched' ? (
             <EnrichmentMatchCard match={enrichResult.match} />
           ) : (
@@ -240,9 +248,9 @@ export default function CaptureScreen() {
 
   if (step === 'captured' && previewUri) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, containerInsetStyle]}>
         <TouchableOpacity
-          style={styles.closeButton}
+          style={[styles.closeButton, { top: insets.top + 16 }]}
           onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Close">
@@ -274,9 +282,9 @@ export default function CaptureScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, containerInsetStyle]}>
       <TouchableOpacity
-        style={styles.closeButton}
+        style={[styles.closeButton, { top: insets.top + 16 }]}
         onPress={handleClose}
         accessibilityRole="button"
         accessibilityLabel="Close">
@@ -326,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
   },
   reviewingContainer: {
     flex: 1,
@@ -335,7 +343,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
   },
   closeButton: {
     position: 'absolute',

@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardStateBadge } from '@/components/card-state-badge';
 import { CollectionPickerSheet } from '@/components/collection-picker-sheet';
@@ -17,6 +18,7 @@ import { capitalize, formatUsdPrice } from '@/src/utils/enrichmentCopy';
 import { extractMatchedDetails } from '@/src/utils/extractMatchedDetails';
 
 export default function CardDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const cardId = Number(id);
 
@@ -85,7 +87,8 @@ export default function CardDetailScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title }} />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <View style={[styles.imageWrapper, { backgroundColor: `${Colors.icon}22` }]}>
           {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} resizeMode="contain" /> : null}
         </View>

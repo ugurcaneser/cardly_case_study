@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { StatTile } from '@/components/stat-tile';
 import { ThemedText } from '@/components/themed-text';
@@ -9,6 +10,7 @@ import { useCardsQuery, useCollectionsQuery } from '@/src/services/api/queries';
 import { calculateEstimatedValueUsd } from '@/src/utils/cardStats';
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const cardsQuery = useCardsQuery();
   const collectionsQuery = useCollectionsQuery();
 
@@ -17,7 +19,7 @@ export default function HomeScreen() {
   const estimatedValue = calculateEstimatedValueUsd(cardsQuery.data ?? []);
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { paddingTop: insets.top + 24 }]}>
       <View style={styles.hero}>
         <ThemedText type="title">Cardly</ThemedText>
         <ThemedText style={[styles.heroSubtitle, { color: Colors.icon }]}>
@@ -49,7 +51,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
     paddingHorizontal: 24,
   },
   hero: {

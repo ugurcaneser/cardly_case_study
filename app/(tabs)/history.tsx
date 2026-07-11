@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardListItem } from '@/components/card-list-item';
 import { EmptyState } from '@/components/empty-state';
@@ -7,11 +8,12 @@ import { ThemedView } from '@/components/themed-view';
 import { useCardsQuery } from '@/src/services/api/queries';
 
 export default function HistoryScreen() {
+  const insets = useSafeAreaInsets();
   const cardsQuery = useCardsQuery();
 
   if (cardsQuery.isPending) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator />
       </ThemedView>
     );
@@ -19,13 +21,15 @@ export default function HistoryScreen() {
 
   if (cardsQuery.isError) {
     return (
-      <EmptyState
-        icon="clock.fill"
-        title="Couldn't load history"
-        description="Check your connection and try again."
-        actionLabel="Retry"
-        onAction={() => cardsQuery.refetch()}
-      />
+      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
+        <EmptyState
+          icon="clock.fill"
+          title="Couldn't load history"
+          description="Check your connection and try again."
+          actionLabel="Retry"
+          onAction={() => cardsQuery.refetch()}
+        />
+      </ThemedView>
     );
   }
 
@@ -33,13 +37,15 @@ export default function HistoryScreen() {
 
   if (cards.length === 0) {
     return (
-      <EmptyState
-        icon="clock.fill"
-        title="History is empty."
-        description="Scan your first card to get started"
-        actionLabel="Start Scanning"
-        onAction={() => router.push('/capture')}
-      />
+      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
+        <EmptyState
+          icon="clock.fill"
+          title="History is empty."
+          description="Scan your first card to get started"
+          actionLabel="Start Scanning"
+          onAction={() => router.push('/capture')}
+        />
+      </ThemedView>
     );
   }
 
@@ -51,7 +57,10 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
+        ]}
       />
     </ThemedView>
   );
@@ -68,6 +77,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
 });

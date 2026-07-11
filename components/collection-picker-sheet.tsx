@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -26,6 +27,7 @@ type CollectionPickerSheetProps = {
  * non-member) is a safe no-op on the backend either way.
  */
 export function CollectionPickerSheet({ visible, cardId, onClose }: CollectionPickerSheetProps) {
+  const insets = useSafeAreaInsets();
   const collectionsQuery = useCollectionsQuery();
   const addMutation = useAddCardToCollectionMutation();
   const removeMutation = useRemoveCardFromCollectionMutation();
@@ -53,7 +55,8 @@ export function CollectionPickerSheet({ visible, cardId, onClose }: CollectionPi
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <ThemedView style={[styles.sheet, { borderColor: Colors.icon }]}>
+        <ThemedView
+          style={[styles.sheet, { borderColor: Colors.icon, paddingBottom: insets.bottom + 20 }]}>
           <ThemedText type="subtitle" style={styles.title}>
             Add to Collection
           </ThemedText>

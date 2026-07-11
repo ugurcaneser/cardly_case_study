@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardListItem } from '@/components/card-list-item';
 import { EmptyState } from '@/components/empty-state';
@@ -21,6 +22,7 @@ import type { Card } from '@/src/types/card';
 import { getErrorMessage } from '@/src/utils/errors';
 
 export default function CollectionDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const collectionId = Number(id);
 
@@ -136,7 +138,7 @@ export default function CollectionDetailScreen() {
               </View>
             );
           }}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
         />
       )}
 
