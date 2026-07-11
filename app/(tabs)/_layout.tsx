@@ -2,12 +2,17 @@ import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { TabIcon } from '@/components/ui/tab-icon';
 import { Colors } from '@/constants/theme';
 
+const TAB_BAR_CONTENT_HEIGHT = 76;
+
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -18,7 +23,16 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.outline,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIconStyle: styles.tabIcon,
-        tabBarStyle: styles.tabBar,
+        // Height/padding include insets.bottom explicitly — overriding the
+        // default tabBarStyle (as we do here for background/border) opts out
+        // of React Navigation's own automatic safe-area handling, so without
+        // this the bar renders too short on Android and the system nav
+        // buttons/gesture bar sit on top of our tab icons (edgeToEdgeEnabled
+        // in app.json means nothing reserves that space for us otherwise).
+        tabBarStyle: [
+          styles.tabBar,
+          { height: TAB_BAR_CONTENT_HEIGHT + insets.bottom, paddingBottom: insets.bottom },
+        ],
         tabBarBackground: () => (
           <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
         ),
@@ -64,7 +78,6 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 76,
     borderTopWidth: 0,
     backgroundColor: 'transparent',
   },
