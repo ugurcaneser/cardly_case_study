@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createCard, listCards } from '@/src/services/api/cardsClient';
+import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { queryKeys } from '@/src/constants/query-keys';
@@ -16,6 +16,21 @@ export function useCreateCardMutation() {
 
   return useMutation({
     mutationFn: (input: CardCreateInput) => createCard(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards });
+    },
+  });
+}
+
+export function useCardQuery(id: number) {
+  return useQuery({ queryKey: queryKeys.card(id), queryFn: () => getCard(id) });
+}
+
+export function useDeleteCardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteCard(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cards });
     },

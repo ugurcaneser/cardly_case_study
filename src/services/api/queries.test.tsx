@@ -3,15 +3,17 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import { createCard, listCards } from '@/src/services/api/cardsClient';
+import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 
 import {
+  useCardQuery,
   useCardsQuery,
   useCollectionsQuery,
   useCreateCardMutation,
   useCreateCollectionMutation,
+  useDeleteCardMutation,
   useEnrichMutation,
 } from './queries';
 
@@ -51,6 +53,59 @@ describe('useCardsQuery', () => {
     (listCards as jest.Mock).mockRejectedValue(new Error('network down'));
 
     const { result } = await renderHook(() => useCardsQuery(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useCardQuery', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('fetches a single card by id', async () => {
+    (getCard as jest.Mock).mockResolvedValue({ id: 7, status: 'enriched' });
+
+    const { result } = await renderHook(() => useCardQuery(7), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(getCard).toHaveBeenCalledWith(7);
+    expect(result.current.data).toEqual({ id: 7, status: 'enriched' });
+  });
+
+  it('surfaces an error state when the request fails', async () => {
+    (getCard as jest.Mock).mockRejectedValue(new Error('not found'));
+
+    const { result } = await renderHook(() => useCardQuery(999), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useDeleteCardMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls deleteCard with the id', async () => {
+    (deleteCard as jest.Mock).mockResolvedValue(undefined);
+
+    const { result } = await renderHook(() => useDeleteCardMutation(), { wrapper: createWrapper() });
+
+    result.current.mutate(7);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(deleteCard).toHaveBeenCalledWith(7);
+  });
+
+  it('surfaces an error when deletion fails', async () => {
+    (deleteCard as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useDeleteCardMutation(), { wrapper: createWrapper() });
+
+    result.current.mutate(7);
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
