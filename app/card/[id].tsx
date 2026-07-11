@@ -95,7 +95,7 @@ export default function CardDetailScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ title }} />
+      <Stack.Screen options={{ title: '' }} />
 
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
