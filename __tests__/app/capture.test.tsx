@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
@@ -7,9 +7,11 @@ import React from 'react';
 
 import CaptureScreen from '@/app/capture';
 import { createCard } from '@/src/services/api/cardsClient';
+import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
+import type { EnrichResult } from '@/src/types/enrichment';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
@@ -23,6 +25,7 @@ jest.mock('expo-image-picker', () => ({
 }));
 
 jest.mock('@/src/services/api/cardsClient');
+jest.mock('@/src/services/api/enrichClient');
 jest.mock('@/src/services/files/imageStorage');
 // Explicit factory (not an automock) — automocking would still `require` the
 // real module to introspect its exports, which pulls in AsyncStorage's
@@ -32,6 +35,34 @@ jest.mock('@/src/services/files/localImageMap', () => ({
   getLocalImageUri: jest.fn(),
   removeLocalImageUri: jest.fn(),
 }));
+
+const matchedResult: EnrichResult = {
+  status: 'matched',
+  ocr: { rawText: 'Lightning Bolt', parsedName: 'Lightning Bolt', parsedNumber: null },
+  match: {
+    source: 'scryfall',
+    scryfallId: 'abc-123',
+    name: 'Lightning Bolt',
+    setName: 'Masters 25',
+    setCode: 'a25',
+    collectorNumber: '133',
+    rarity: 'common',
+    manaCost: '{R}',
+    typeLine: 'Instant',
+    oracleText: null,
+    imageUrl: 'https://example.com/card.jpg',
+    prices: { usd: '0.25' },
+  },
+  timing: { ocrMs: 100, matchMs: 50, totalMs: 150 },
+};
+
+const unrecognizedResult: EnrichResult = {
+  status: 'unrecognized',
+  ocr: { rawText: null, parsedName: null, parsedNumber: null },
+  match: null,
+  reason: 'no_ocr_text',
+  timing: { ocrMs: 80, matchMs: 0, totalMs: 80 },
+};
 
 function renderCaptureScreen() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -56,6 +87,10 @@ describe('CaptureScreen', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     useCaptureStore.getState().reset();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders the idle picker options', async () => {
@@ -90,7 +125,7 @@ describe('CaptureScreen', () => {
     await captureAPhoto();
 
     expect(screen.getByText('Retake')).toBeTruthy();
-    expect(screen.getByText('Save')).toBeTruthy();
+    expect(screen.getByText('Analyze Card')).toBeTruthy();
     expect(screen.queryByText('Take Photo')).toBeNull();
     expect(useCaptureStore.getState()).toMatchObject({
       step: 'captured',
@@ -128,14 +163,113 @@ describe('CaptureScreen', () => {
     expect(useCaptureStore.getState().step).toBe('idle');
   });
 
-  it('saves the card without enrichment and navigates to its detail screen', async () => {
+  it('analyzes the card and shows the matched review view', async () => {
+    (enrichCardImage as jest.Mock).mockResolvedValue(matchedResult);
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
+    expect(enrichCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
+    expect(screen.getByText('Masters 25 · #133')).toBeTruthy();
+    expect(useCaptureStore.getState().step).toBe('reviewing');
+  });
+
+  it('analyzes the card and shows the unrecognized review view', async () => {
+    (enrichCardImage as jest.Mock).mockResolvedValue(unrecognizedResult);
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+
+    await waitFor(() => expect(screen.getByText('Card not recognized')).toBeTruthy());
+  });
+
+  it('shows an escalating cold-start hint while the submitting step is active', async () => {
+    // Drives the step directly through the store rather than via a real
+    // Analyze press + pending mutation: fireEvent.press awaits the handler's
+    // promise to completion (including react-query's mutateAsync), so it
+    // can't be used to inspect an intentionally-still-pending in-flight
+    // state without leaving an unresolved, overlapping act() scope. The
+    // hint's escalation is purely a function of `step === 'submitting'`, so
+    // driving that directly is also the more precise unit boundary - the
+    // mutation's success/failure paths are already covered separately above.
+    await renderCaptureScreen();
+
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask', 'hrtime', 'performance'] });
+    try {
+      await act(() => {
+        useCaptureStore.setState({ step: 'submitting', previewUri: 'file:///tmp/photo.jpg' });
+      });
+
+      expect(screen.getByText('Analyzing your card…')).toBeTruthy();
+      expect(screen.queryByText('This is taking a little longer than usual…')).toBeNull();
+
+      await act(() => {
+        jest.advanceTimersByTime(5000);
+      });
+      expect(screen.getByText('This is taking a little longer than usual…')).toBeTruthy();
+
+      await act(() => {
+        jest.advanceTimersByTime(11000);
+      });
+      expect(
+        screen.getByText('The server might be waking up from a cold start — this can take up to a minute.')
+      ).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('shows the error step when analysis fails', async () => {
+    (enrichCardImage as jest.Mock).mockRejectedValue(new Error('OCR provider error'));
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+
+    await waitFor(() => expect(screen.getByText("Couldn't analyze this card")).toBeTruthy());
+    expect(screen.getByText('OCR provider error')).toBeTruthy();
+  });
+
+  it('retries analysis from the error step', async () => {
+    (enrichCardImage as jest.Mock)
+      .mockRejectedValueOnce(new Error('OCR provider error'))
+      .mockResolvedValueOnce(matchedResult);
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText("Couldn't analyze this card")).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Retry'));
+
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+  });
+
+  it('discards and returns to idle from the error step', async () => {
+    (enrichCardImage as jest.Mock).mockRejectedValue(new Error('OCR provider error'));
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText("Couldn't analyze this card")).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Discard'));
+
+    expect(screen.getByText('Take Photo')).toBeTruthy();
+    expect(useCaptureStore.getState().step).toBe('idle');
+  });
+
+  it('saves the reviewed card and navigates to its detail screen', async () => {
+    (enrichCardImage as jest.Mock).mockResolvedValue(matchedResult);
     (storeCardImage as jest.Mock).mockResolvedValue({
       localUri: 'file:///document/cards/card-1.jpg',
       thumbnailBase64: 'BASE64DATA',
     });
-    (createCard as jest.Mock).mockResolvedValue({ id: 7, status: 'pending' });
+    (createCard as jest.Mock).mockResolvedValue({ id: 7, status: 'enriched' });
 
     await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
     await fireEvent.press(screen.getByText('Save'));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/7'));
@@ -143,56 +277,6 @@ describe('CaptureScreen', () => {
     expect(storeCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
     expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64DATA' });
     expect(setLocalImageUri).toHaveBeenCalledWith(7, 'file:///document/cards/card-1.jpg');
-    expect(useCaptureStore.getState().step).toBe('idle');
-  });
-
-  it('shows the error step with a retry when saving fails', async () => {
-    (storeCardImage as jest.Mock).mockResolvedValue({
-      localUri: 'file:///document/cards/card-1.jpg',
-      thumbnailBase64: 'BASE64DATA',
-    });
-    (createCard as jest.Mock).mockRejectedValue(new Error('network down'));
-
-    await captureAPhoto();
-    await fireEvent.press(screen.getByText('Save'));
-
-    await waitFor(() => expect(screen.getByText("Couldn't save this card")).toBeTruthy());
-    expect(screen.getByText('network down')).toBeTruthy();
-    expect(router.replace).not.toHaveBeenCalled();
-  });
-
-  it('retries saving from the error step', async () => {
-    (storeCardImage as jest.Mock).mockResolvedValue({
-      localUri: 'file:///document/cards/card-1.jpg',
-      thumbnailBase64: 'BASE64DATA',
-    });
-    (createCard as jest.Mock)
-      .mockRejectedValueOnce(new Error('network down'))
-      .mockResolvedValueOnce({ id: 9, status: 'pending' });
-
-    await captureAPhoto();
-    await fireEvent.press(screen.getByText('Save'));
-    await waitFor(() => expect(screen.getByText("Couldn't save this card")).toBeTruthy());
-
-    await fireEvent.press(screen.getByText('Retry'));
-
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/9'));
-  });
-
-  it('discards and returns to idle from the error step', async () => {
-    (storeCardImage as jest.Mock).mockResolvedValue({
-      localUri: 'file:///document/cards/card-1.jpg',
-      thumbnailBase64: 'BASE64DATA',
-    });
-    (createCard as jest.Mock).mockRejectedValue(new Error('network down'));
-
-    await captureAPhoto();
-    await fireEvent.press(screen.getByText('Save'));
-    await waitFor(() => expect(screen.getByText("Couldn't save this card")).toBeTruthy());
-
-    await fireEvent.press(screen.getByText('Discard'));
-
-    expect(screen.getByText('Take Photo')).toBeTruthy();
     expect(useCaptureStore.getState().step).toBe('idle');
   });
 });

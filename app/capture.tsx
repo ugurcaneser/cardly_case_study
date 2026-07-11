@@ -1,31 +1,57 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useCreateCardMutation } from '@/src/services/api/queries';
+import { useCreateCardMutation, useEnrichMutation } from '@/src/services/api/queries';
 import { storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
 import { getErrorMessage } from '@/src/utils/errors';
 
+// Escalates the cold-start hint copy in two stages rather than a single
+// message, since a genuine free-tier cold start (up to ~60s) reads very
+// differently at 5s ("still working") than at 15s+ ("this is a cold start").
+const COLD_START_HINT_MS = 5000;
+const COLD_START_SEVERE_HINT_MS = 15000;
+
 export default function CaptureScreen() {
   const step = useCaptureStore((state) => state.step);
   const previewUri = useCaptureStore((state) => state.previewUri);
+  const enrichResult = useCaptureStore((state) => state.enrichResult);
+  const coldStartHintVisible = useCaptureStore((state) => state.coldStartHintVisible);
   const saveError = useCaptureStore((state) => state.error);
   const setCaptured = useCaptureStore((state) => state.setCaptured);
+  const startSubmitting = useCaptureStore((state) => state.startSubmitting);
+  const showColdStartHint = useCaptureStore((state) => state.showColdStartHint);
+  const setReviewing = useCaptureStore((state) => state.setReviewing);
   const startSaving = useCaptureStore((state) => state.startSaving);
   const setError = useCaptureStore((state) => state.setError);
   const reset = useCaptureStore((state) => state.reset);
 
   const createCardMutation = useCreateCardMutation();
+  const enrichMutation = useEnrichMutation();
 
   const [isPicking, setIsPicking] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
+  const [isColdStartSevere, setIsColdStartSevere] = useState(false);
+
+  useEffect(() => {
+    if (step !== 'submitting') {
+      setIsColdStartSevere(false);
+      return;
+    }
+    const hintTimer = setTimeout(showColdStartHint, COLD_START_HINT_MS);
+    const severeHintTimer = setTimeout(() => setIsColdStartSevere(true), COLD_START_SEVERE_HINT_MS);
+    return () => {
+      clearTimeout(hintTimer);
+      clearTimeout(severeHintTimer);
+    };
+  }, [step, showColdStartHint]);
 
   function handlePickerResult(result: ImagePicker.ImagePickerResult) {
     if (!result.canceled) {
@@ -62,6 +88,19 @@ export default function CaptureScreen() {
       handlePickerResult(result);
     } finally {
       setIsPicking(false);
+    }
+  }
+
+  async function handleAnalyze() {
+    if (!previewUri) {
+      return;
+    }
+    startSubmitting();
+    try {
+      const result = await enrichMutation.mutateAsync(previewUri);
+      setReviewing(result);
+    } catch (error) {
+      setError(getErrorMessage(error));
     }
   }
 
@@ -106,13 +145,13 @@ export default function CaptureScreen() {
     return (
       <ThemedView style={styles.container}>
         <ThemedText type="subtitle" style={styles.hero}>
-          Couldn&apos;t save this card
+          Couldn&apos;t analyze this card
         </ThemedText>
         {saveError ? <ThemedText style={styles.errorText}>{saveError}</ThemedText> : null}
         <View style={styles.buttons}>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-            onPress={handleSave}
+            onPress={handleAnalyze}
             accessibilityRole="button">
             <ThemedText style={styles.primaryButtonText} color="#fff">
               Retry
@@ -124,6 +163,55 @@ export default function CaptureScreen() {
             accessibilityRole="button">
             <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
               Discard
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (step === 'submitting') {
+    return (
+      <ThemedView style={styles.container}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.savingText}>Analyzing your card…</ThemedText>
+        {coldStartHintVisible ? (
+          <ThemedText style={[styles.hintText, { color: Colors.icon }]}>
+            {isColdStartSevere
+              ? 'The server might be waking up from a cold start — this can take up to a minute.'
+              : 'This is taking a little longer than usual…'}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
+    );
+  }
+
+  if (step === 'reviewing' && enrichResult) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText type="subtitle" style={styles.hero}>
+          {enrichResult.status === 'matched' ? enrichResult.match.name : 'Card not recognized'}
+        </ThemedText>
+        <ThemedText style={[styles.hintText, { color: Colors.icon }]}>
+          {enrichResult.status === 'matched'
+            ? `${enrichResult.match.setName} · #${enrichResult.match.collectorNumber}`
+            : 'We couldn’t confidently match this card — you can still save it.'}
+        </ThemedText>
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
+            onPress={handleSave}
+            accessibilityRole="button">
+            <ThemedText style={styles.primaryButtonText} color="#fff">
+              Save
+            </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
+            onPress={handleRetake}
+            accessibilityRole="button">
+            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
+              Retake
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -147,10 +235,10 @@ export default function CaptureScreen() {
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-            onPress={handleSave}
+            onPress={handleAnalyze}
             accessibilityRole="button">
             <ThemedText style={styles.primaryButtonText} color="#fff">
-              Save
+              Analyze Card
             </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -242,6 +330,11 @@ const styles = StyleSheet.create({
   },
   savingText: {
     marginTop: 16,
+  },
+  hintText: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 13,
   },
   buttons: {
     width: '100%',
