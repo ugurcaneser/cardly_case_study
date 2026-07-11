@@ -9,7 +9,7 @@ import { TextInputModal } from '@/components/text-input-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.containerMargin,
     paddingTop: 12,
   },
   actionText: {
@@ -184,8 +184,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: Spacing.containerMargin,
+    paddingTop: Spacing.stackSm,
+    gap: Spacing.stackSm,
   },
   row: {
     flexDirection: 'row',
