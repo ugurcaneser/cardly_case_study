@@ -43,9 +43,14 @@ export default function HomeScreen() {
         </BentoCard>
 
         <View style={styles.statsRow}>
-          <StatTile emoji="🃏" value={String(cardCount)} label="Cards" />
+          <StatTile emoji="🃏" value={String(cardCount)} label="Cards" onPress={() => router.push('/history')} />
           <StatTile emoji="💰" value={`$${estimatedValue.toFixed(2)}`} label="Est. Value" />
-          <StatTile emoji="📚" value={String(collectionCount)} label="Collections" />
+          <StatTile
+            emoji="📚"
+            value={String(collectionCount)}
+            label="Collections"
+            onPress={() => router.push('/collections')}
+          />
         </View>
 
         {recentCards.length > 0 ? (

@@ -70,6 +70,21 @@ describe('HomeScreen', () => {
     expect(router.push).toHaveBeenCalledWith('/history');
   });
 
+  it('navigates to History and Collections when their stat tiles are pressed', async () => {
+    (listCards as jest.Mock).mockResolvedValue([]);
+    (listCollections as jest.Mock).mockResolvedValue([]);
+
+    await renderHome();
+
+    await waitFor(() => expect(screen.getByText('Cards')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Cards'));
+    expect(router.push).toHaveBeenCalledWith('/history');
+
+    await fireEvent.press(screen.getByText('Collections'));
+    expect(router.push).toHaveBeenCalledWith('/collections');
+  });
+
   it('hides the Recent Cards section when there are no cards', async () => {
     (listCards as jest.Mock).mockResolvedValue([]);
     (listCollections as jest.Mock).mockResolvedValue([]);
