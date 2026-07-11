@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { CardStateBadge } from '@/components/card-state-badge';
+import { CollectionPickerSheet } from '@/components/collection-picker-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,6 +22,7 @@ export default function CardDetailScreen() {
   const deleteCardMutation = useDeleteCardMutation();
 
   const [localImageUri, setLocalImageUriState] = useState<string | null>(null);
+  const [isPickerVisible, setPickerVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,6 +122,16 @@ export default function CardDetailScreen() {
           </View>
         ) : null}
 
+        <TouchableOpacity
+          style={[styles.addToCollectionButton, { borderColor: Colors.tint }]}
+          onPress={() => setPickerVisible(true)}
+          accessibilityRole="button">
+          <IconSymbol name="folder.fill" size={18} color={Colors.tint} />
+          <ThemedText style={[styles.addToCollectionButtonText, { color: Colors.tint }]}>
+            Add to Collection
+          </ThemedText>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} accessibilityRole="button">
           <IconSymbol name="trash" size={18} color="#991B1B" />
           <ThemedText style={styles.deleteButtonText} color="#991B1B">
@@ -127,6 +139,12 @@ export default function CardDetailScreen() {
           </ThemedText>
         </TouchableOpacity>
       </ScrollView>
+
+      <CollectionPickerSheet
+        visible={isPickerVisible}
+        cardId={cardId}
+        onClose={() => setPickerVisible(false)}
+      />
     </ThemedView>
   );
 }
@@ -197,12 +215,27 @@ const styles = StyleSheet.create({
   ocrText: {
     fontSize: 14,
   },
-  deleteButton: {
+  addToCollectionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginTop: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    borderWidth: 1,
+  },
+  addToCollectionButtonText: {
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
     paddingVertical: 10,
   },
   deleteButtonText: {

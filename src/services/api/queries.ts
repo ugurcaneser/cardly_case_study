@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/cardsClient';
-import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
+import {
+  addCardToCollection,
+  createCollection,
+  listCollections,
+  removeCardFromCollection,
+} from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { queryKeys } from '@/src/constants/query-keys';
 import type { CardCreateInput } from '@/src/types/card';
@@ -54,6 +59,32 @@ export function useCreateCollectionMutation() {
     mutationFn: (input: CollectionCreateInput) => createCollection(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useAddCardToCollectionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ collectionId, cardId }: { collectionId: number; cardId: number }) =>
+      addCardToCollection(collectionId, cardId),
+    onSuccess: (_data, { collectionId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+      queryClient.invalidateQueries({ queryKey: queryKeys.collection(collectionId) });
+    },
+  });
+}
+
+export function useRemoveCardFromCollectionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ collectionId, cardId }: { collectionId: number; cardId: number }) =>
+      removeCardFromCollection(collectionId, cardId),
+    onSuccess: (_data, { collectionId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+      queryClient.invalidateQueries({ queryKey: queryKeys.collection(collectionId) });
     },
   });
 }

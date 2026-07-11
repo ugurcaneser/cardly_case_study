@@ -4,10 +4,16 @@ import type { ReactNode } from 'react';
 import React from 'react';
 
 import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/cardsClient';
-import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
+import {
+  addCardToCollection,
+  createCollection,
+  listCollections,
+  removeCardFromCollection,
+} from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 
 import {
+  useAddCardToCollectionMutation,
   useCardQuery,
   useCardsQuery,
   useCollectionsQuery,
@@ -15,6 +21,7 @@ import {
   useCreateCollectionMutation,
   useDeleteCardMutation,
   useEnrichMutation,
+  useRemoveCardFromCollectionMutation,
 } from './queries';
 
 jest.mock('@/src/services/api/cardsClient');
@@ -219,6 +226,70 @@ describe('useCreateCollectionMutation', () => {
     });
 
     result.current.mutate({ name: 'Vintage' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useAddCardToCollectionMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls addCardToCollection with the collection and card ids', async () => {
+    (addCardToCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 1 });
+
+    const { result } = await renderHook(() => useAddCardToCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ collectionId: 1, cardId: 7 });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(addCardToCollection).toHaveBeenCalledWith(1, 7);
+  });
+
+  it('surfaces an error when adding fails', async () => {
+    (addCardToCollection as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useAddCardToCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ collectionId: 1, cardId: 7 });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useRemoveCardFromCollectionMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls removeCardFromCollection with the collection and card ids', async () => {
+    (removeCardFromCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0 });
+
+    const { result } = await renderHook(() => useRemoveCardFromCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ collectionId: 1, cardId: 7 });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(removeCardFromCollection).toHaveBeenCalledWith(1, 7);
+  });
+
+  it('surfaces an error when removal fails', async () => {
+    (removeCardFromCollection as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useRemoveCardFromCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ collectionId: 1, cardId: 7 });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
