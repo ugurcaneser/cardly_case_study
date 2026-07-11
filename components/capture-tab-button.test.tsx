@@ -1,7 +1,5 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { Text } from 'react-native';
 
 import { CaptureTabButton } from './capture-tab-button';
 
@@ -14,24 +12,14 @@ describe('CaptureTabButton', () => {
     jest.resetAllMocks();
   });
 
-  it('renders its icon/label like a normal tab, but navigates to /capture instead of the default tab switch', async () => {
-    const defaultOnPress = jest.fn();
+  it('renders as a floating button and navigates to /capture when pressed', async () => {
+    await render(<CaptureTabButton />);
 
-    // PlatformPressable (used by HapticTab) reads React Navigation's theme
-    // via context, so it needs a ThemeProvider ancestor even in isolation.
-    await render(
-      <ThemeProvider value={DefaultTheme}>
-        <CaptureTabButton onPress={defaultOnPress}>
-          <Text>Scan</Text>
-        </CaptureTabButton>
-      </ThemeProvider>
-    );
+    const button = screen.getByRole('button');
+    expect(button).toBeTruthy();
 
-    expect(screen.getByText('Scan')).toBeTruthy();
-
-    await fireEvent.press(screen.getByText('Scan'));
+    await fireEvent.press(button);
 
     expect(router.push).toHaveBeenCalledWith('/capture');
-    expect(defaultOnPress).not.toHaveBeenCalled();
   });
 });

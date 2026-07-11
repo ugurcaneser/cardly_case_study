@@ -1,11 +1,14 @@
 import { router } from 'expo-router';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { StatTile } from '@/components/stat-tile';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
+import { BentoCard } from '@/components/ui/bento-card';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { PrimaryButton } from '@/components/ui/primary-button';
+import { Colors, Spacing } from '@/constants/theme';
 import { useCardsQuery, useCollectionsQuery } from '@/src/services/api/queries';
 import { calculateEstimatedValueUsd } from '@/src/utils/cardStats';
 
@@ -19,31 +22,35 @@ export default function HomeScreen() {
   const estimatedValue = calculateEstimatedValueUsd(cardsQuery.data ?? []);
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top + 24 }]}>
-      <View style={styles.hero}>
-        <ThemedText type="title">Cardly</ThemedText>
-        <ThemedText style={[styles.heroSubtitle, { color: Colors.icon }]}>
-          Scan a card to identify it and track your collection.
-        </ThemedText>
-        <TouchableOpacity
-          style={[styles.scanButton, { backgroundColor: Colors.tint }]}
-          onPress={() => router.push('/capture')}
-          accessibilityRole="button">
-          <ThemedText style={styles.scanButtonText} color="#fff">
-            Scan Now
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
+    <ThemedView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
+        ]}>
+        <ThemedText type="headlineMd">Cardly</ThemedText>
 
-      <View style={styles.statsRow}>
-        <StatTile icon="square.stack.fill" value={String(cardCount)} label="Cards" />
-        <StatTile
-          icon="dollarsign.circle.fill"
-          value={`$${estimatedValue.toFixed(2)}`}
-          label="Est. Value"
-        />
-        <StatTile icon="folder.fill" value={String(collectionCount)} label="Collections" />
-      </View>
+        <BentoCard style={styles.heroCard}>
+          <View style={styles.heroIconRow}>
+            <IconSymbol name="camera.fill" size={20} color={Colors.tertiary} />
+            <ThemedText type="titleLg">Scan a Card</ThemedText>
+          </View>
+          <ThemedText type="bodyMd" style={{ color: Colors.onSurfaceVariant }}>
+            Identify it and add it to your collection in seconds.
+          </ThemedText>
+          <PrimaryButton label="Scan Now" onPress={() => router.push('/capture')} style={styles.heroButton} />
+        </BentoCard>
+
+        <View style={styles.statsRow}>
+          <StatTile icon="square.stack.fill" value={String(cardCount)} label="Cards" />
+          <StatTile
+            icon="dollarsign.circle.fill"
+            value={`$${estimatedValue.toFixed(2)}`}
+            label="Est. Value"
+          />
+          <StatTile icon="folder.fill" value={String(collectionCount)} label="Collections" />
+        </View>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -51,27 +58,24 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
   },
-  hero: {
+  content: {
+    paddingHorizontal: Spacing.containerMargin,
+    gap: Spacing.gutterBento,
+  },
+  heroCard: {
+    gap: Spacing.stackSm,
+  },
+  heroIconRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 32,
+    gap: 8,
   },
-  heroSubtitle: {
-    textAlign: 'center',
-  },
-  scanButton: {
-    marginTop: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 28,
-  },
-  scanButtonText: {
-    fontWeight: '600',
-    fontSize: 16,
+  heroButton: {
+    marginTop: Spacing.stackSm,
   },
   statsRow: {
     flexDirection: 'row',
+    gap: Spacing.gutterBento,
   },
 });

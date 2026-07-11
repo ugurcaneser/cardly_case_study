@@ -1,8 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { BentoCard } from '@/components/ui/bento-card';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { Colors, Radii } from '@/constants/theme';
 
 type StatTileProps = {
   icon: IconSymbolName;
@@ -12,27 +13,35 @@ type StatTileProps = {
 
 export function StatTile({ icon, value, label }: StatTileProps) {
   return (
-    <View style={styles.tile}>
-      <IconSymbol name={icon} size={20} color={Colors.tint} />
-      <ThemedText type="defaultSemiBold" style={styles.value}>
+    <BentoCard style={styles.tile}>
+      <View style={styles.iconCircle}>
+        <IconSymbol name={icon} size={18} color={Colors.primary} />
+      </View>
+      <ThemedText type="headlineSm" style={styles.value}>
         {value}
       </ThemedText>
-      <ThemedText style={[styles.label, { color: Colors.icon }]}>{label}</ThemedText>
-    </View>
+      <ThemedText type="labelMd" style={{ color: Colors.onSurfaceVariant }}>
+        {label}
+      </ThemedText>
+    </BentoCard>
   );
 }
 
 const styles = StyleSheet.create({
   tile: {
     flex: 1,
+    gap: 8,
+    padding: 14,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: Radii.full,
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 12,
+    justifyContent: 'center',
+    backgroundColor: Colors.surfaceContainerHigh,
   },
   value: {
-    fontSize: 18,
-  },
-  label: {
-    fontSize: 12,
+    marginTop: 4,
   },
 });

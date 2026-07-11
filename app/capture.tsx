@@ -1,15 +1,18 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
 import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { GlassIconButton } from '@/components/ui/glass-icon-button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { PrimaryButton } from '@/components/ui/primary-button';
+import { SecondaryButton } from '@/components/ui/secondary-button';
+import { Colors, Radii, Spacing } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { useCreateCardMutation, useEnrichMutation } from '@/src/services/api/queries';
@@ -152,8 +155,10 @@ export default function CaptureScreen() {
   if (step === 'saving') {
     return (
       <ThemedView style={[styles.container, containerInsetStyle]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.savingText}>Saving…</ThemedText>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <ThemedText type="bodyLg" style={styles.savingText}>
+          Saving…
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -161,30 +166,23 @@ export default function CaptureScreen() {
   if (step === 'error') {
     return (
       <ThemedView style={[styles.container, containerInsetStyle]}>
-        <ThemedText type="subtitle" style={styles.hero}>
+        <ThemedText type="headlineSm" style={styles.hero}>
           Couldn&apos;t analyze this card
         </ThemedText>
-        {saveError ? <ThemedText style={styles.errorText}>{saveError}</ThemedText> : null}
+        {saveError ? (
+          <ThemedText type="bodyMd" style={[styles.errorText, { color: Colors.error }]}>
+            {saveError}
+          </ThemedText>
+        ) : null}
         <View style={styles.buttons}>
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-            onPress={handleAnalyze}
-            accessibilityRole="button">
-            <ThemedText style={styles.primaryButtonText} color="#fff">
-              Retry
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-            onPress={handleSave}
-            accessibilityRole="button">
-            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-              Save without Analysis
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tertiaryButton} onPress={handleRetake} accessibilityRole="button">
-            <ThemedText style={[styles.tertiaryButtonText, { color: Colors.icon }]}>Discard</ThemedText>
-          </TouchableOpacity>
+          <PrimaryButton label="Retry" onPress={handleAnalyze} />
+          <SecondaryButton label="Save without Analysis" onPress={handleSave} />
+          <ThemedText
+            type="titleLg"
+            style={[styles.tertiaryButtonText, { color: Colors.onSurfaceVariant }]}
+            onPress={handleRetake}>
+            Discard
+          </ThemedText>
         </View>
       </ThemedView>
     );
@@ -193,10 +191,12 @@ export default function CaptureScreen() {
   if (step === 'submitting') {
     return (
       <ThemedView style={[styles.container, containerInsetStyle]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.savingText}>Analyzing your card…</ThemedText>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <ThemedText type="bodyLg" style={styles.savingText}>
+          Analyzing your card…
+        </ThemedText>
         {coldStartHintVisible ? (
-          <ThemedText style={[styles.hintText, { color: Colors.icon }]}>
+          <ThemedText type="bodyMd" style={[styles.hintText, { color: Colors.onSurfaceVariant }]}>
             {isColdStartSevere
               ? 'The server might be waking up from a cold start — this can take up to a minute.'
               : 'This is taking a little longer than usual…'}
@@ -225,22 +225,8 @@ export default function CaptureScreen() {
           )}
 
           <View style={styles.buttons}>
-            <TouchableOpacity
-              style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-              onPress={handleSave}
-              accessibilityRole="button">
-              <ThemedText style={styles.primaryButtonText} color="#fff">
-                Save
-              </ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-              onPress={handleRetake}
-              accessibilityRole="button">
-              <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-                Retake
-              </ThemedText>
-            </TouchableOpacity>
+            <PrimaryButton label="Save" onPress={handleSave} />
+            <SecondaryButton label="Retake" onPress={handleRetake} />
           </View>
         </ScrollView>
       </ThemedView>
@@ -250,33 +236,20 @@ export default function CaptureScreen() {
   if (step === 'captured' && previewUri) {
     return (
       <ThemedView style={[styles.container, containerInsetStyle]}>
-        <TouchableOpacity
-          style={[styles.closeButton, { top: insets.top + 16 }]}
+        <GlassIconButton
           onPress={handleClose}
-          accessibilityRole="button"
-          accessibilityLabel="Close">
-          <IconSymbol name="xmark" size={24} color={Colors.text} />
-        </TouchableOpacity>
+          accessibilityLabel="Close"
+          style={[styles.closeButton, { top: insets.top + 16 }]}>
+          <IconSymbol name="xmark" size={22} color={Colors.onSurface} />
+        </GlassIconButton>
 
-        <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="contain" />
+        <View style={styles.previewFrame}>
+          <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="contain" />
+        </View>
 
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-            onPress={handleAnalyze}
-            accessibilityRole="button">
-            <ThemedText style={styles.primaryButtonText} color="#fff">
-              Analyze Card
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-            onPress={handleRetake}
-            accessibilityRole="button">
-            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-              Retake
-            </ThemedText>
-          </TouchableOpacity>
+          <PrimaryButton label="Analyze Card" onPress={handleAnalyze} />
+          <SecondaryButton label="Retake" onPress={handleRetake} />
         </View>
       </ThemedView>
     );
@@ -284,48 +257,38 @@ export default function CaptureScreen() {
 
   return (
     <ThemedView style={[styles.container, containerInsetStyle]}>
-      <TouchableOpacity
-        style={[styles.closeButton, { top: insets.top + 16 }]}
+      <GlassIconButton
         onPress={handleClose}
-        accessibilityRole="button"
-        accessibilityLabel="Close">
-        <IconSymbol name="xmark" size={24} color={Colors.text} />
-      </TouchableOpacity>
+        accessibilityLabel="Close"
+        style={[styles.closeButton, { top: insets.top + 16 }]}>
+        <IconSymbol name="xmark" size={22} color={Colors.onSurface} />
+      </GlassIconButton>
 
       <View style={styles.hero}>
-        <IconSymbol name="camera.fill" size={48} color={Colors.tint} />
-        <ThemedText type="title">Scan a Card</ThemedText>
-        <ThemedText style={[styles.subtitle, { color: Colors.icon }]}>
+        <IconSymbol name="camera.fill" size={44} color={Colors.tertiary} />
+        <ThemedText type="headlineMd">Scan a Card</ThemedText>
+        <ThemedText type="bodyMd" style={[styles.subtitle, { color: Colors.onSurfaceVariant }]}>
           Take a photo or choose one from your library.
         </ThemedText>
       </View>
 
-      {pickError ? <ThemedText style={styles.errorText}>{pickError}</ThemedText> : null}
+      {pickError ? (
+        <ThemedText type="bodyMd" style={[styles.errorText, { color: Colors.error }]}>
+          {pickError}
+        </ThemedText>
+      ) : null}
 
       <View style={styles.buttons}>
-        <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
+        <PrimaryButton
+          label="Take Photo"
           onPress={handleTakePhoto}
           disabled={isPicking}
-          accessibilityRole="button">
-          <IconSymbol name="camera.fill" size={20} color="#fff" />
-          <ThemedText style={styles.primaryButtonText} color="#fff">
-            Take Photo
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-          onPress={handleChooseFromLibrary}
-          disabled={isPicking}
-          accessibilityRole="button">
-          <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-            Choose from Library
-          </ThemedText>
-        </TouchableOpacity>
+          icon={<IconSymbol name="camera.fill" size={18} color={Colors.onPrimary} />}
+        />
+        <SecondaryButton label="Choose from Library" onPress={handleChooseFromLibrary} disabled={isPicking} />
       </View>
 
-      {isPicking ? <ActivityIndicator style={styles.loadingIndicator} /> : null}
+      {isPicking ? <ActivityIndicator style={styles.loadingIndicator} color={Colors.primary} /> : null}
     </ThemedView>
   );
 }
@@ -335,7 +298,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.containerMargin,
   },
   reviewingContainer: {
     flex: 1,
@@ -344,24 +307,23 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.containerMargin,
+    gap: Spacing.stackMd,
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
     left: 16,
-    padding: 8,
+    zIndex: 1,
   },
   hero: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.stackSm,
     marginBottom: 24,
   },
   subtitle: {
     textAlign: 'center',
   },
   errorText: {
-    color: '#991B1B',
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -371,51 +333,31 @@ const styles = StyleSheet.create({
   hintText: {
     marginTop: 8,
     textAlign: 'center',
-    fontSize: 13,
   },
   buttons: {
     width: '100%',
-    gap: 12,
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 28,
-  },
-  primaryButtonText: {
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 28,
-    borderWidth: 1,
-  },
-  secondaryButtonText: {
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  tertiaryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
+    gap: Spacing.stackSm,
   },
   tertiaryButtonText: {
-    fontWeight: '600',
-    fontSize: 15,
+    textAlign: 'center',
+    paddingVertical: 10,
   },
   loadingIndicator: {
     marginTop: 16,
   },
-  preview: {
+  previewFrame: {
     width: '100%',
     flex: 1,
     marginBottom: 16,
+    borderRadius: Radii.xl,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    overflow: 'hidden',
+    backgroundColor: Colors.surfaceContainerLowest,
+  },
+  preview: {
+    width: '100%',
+    height: '100%',
   },
   actions: {
     width: '100%',
