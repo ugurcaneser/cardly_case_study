@@ -1,4 +1,5 @@
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Radii } from '@/constants/theme';
@@ -20,7 +21,7 @@ export function RecentCardTile({ card, onPress }: RecentCardTileProps) {
     <TouchableOpacity style={styles.tile} onPress={onPress} accessibilityRole="button">
       <View style={styles.imageWrapper}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" onError={onError} />
+          <Image source={{ uri: imageUri }} style={styles.image} contentFit="cover" onError={onError} />
         ) : null}
       </View>
       <ThemedText type="bodyMd" numberOfLines={1} style={styles.title}>

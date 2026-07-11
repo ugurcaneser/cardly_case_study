@@ -1,4 +1,5 @@
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { CardStateBadge } from '@/components/card-state-badge';
 import { ThemedText } from '@/components/themed-text';
@@ -22,7 +23,7 @@ export function CardListItem({ card, onPress }: CardListItemProps) {
       <BentoCard style={styles.row}>
         <View style={styles.thumbnail}>
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.thumbnailImage} onError={onError} />
+            <Image source={{ uri: imageUri }} style={styles.thumbnailImage} contentFit="cover" onError={onError} />
           ) : null}
         </View>
 

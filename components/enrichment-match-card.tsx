@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Colors } from '@/constants/theme';
@@ -16,7 +17,7 @@ export function EnrichmentMatchCard({ match }: EnrichmentMatchCardProps) {
     <View style={styles.container}>
       <View style={[styles.imageWrapper, { backgroundColor: `${Colors.icon}22` }]}>
         {match.imageUrl ? (
-          <Image source={{ uri: match.imageUrl }} style={styles.image} resizeMode="contain" />
+          <Image source={{ uri: match.imageUrl }} style={styles.image} contentFit="contain" />
         ) : null}
       </View>
 

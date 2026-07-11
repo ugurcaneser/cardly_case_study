@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardStateBadge } from '@/components/card-state-badge';
@@ -104,7 +105,7 @@ export default function CardDetailScreen() {
             <Image
               source={{ uri: imageUri }}
               style={styles.image}
-              resizeMode="contain"
+              contentFit="contain"
               onError={onImageError}
             />
           ) : null}
