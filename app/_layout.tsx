@@ -60,7 +60,17 @@ export default function RootLayout() {
         client={queryClient}
         persistOptions={{ persister: asyncStoragePersister }}>
         <ThemeProvider value={NavigationTheme}>
-          <Stack screenOptions={{ headerBackTitle: ' ', animation: 'none' }}>
+          <Stack
+            screenOptions={{
+              headerBackTitle: ' ',
+              animation: 'none',
+              // Without an explicit contentStyle, react-native-screens paints
+              // each screen's native container with its platform default
+              // (often white) for a frame before the JS background renders -
+              // normally masked by the transition animation, but with
+              // animation:'none' that gap becomes a visible flash on pop.
+              contentStyle: { backgroundColor: Colors.surface },
+            }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
           </Stack>
           <StatusBar style="light" />
