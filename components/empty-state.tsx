@@ -3,7 +3,6 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type EmptyStateProps = {
   icon: IconSymbolName;
@@ -14,13 +13,10 @@ type EmptyStateProps = {
 };
 
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-
   return (
     <View style={styles.container}>
-      <View style={[styles.iconCircle, { backgroundColor: `${colors.icon}22` }]}>
-        <IconSymbol name={icon} size={32} color={colors.tint} />
+      <View style={[styles.iconCircle, { backgroundColor: `${Colors.icon}22` }]}>
+        <IconSymbol name={icon} size={32} color={Colors.tint} />
       </View>
 
       <ThemedText type="subtitle" style={styles.title}>
@@ -28,15 +24,15 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
       </ThemedText>
 
       {description ? (
-        <ThemedText style={[styles.description, { color: colors.icon }]}>{description}</ThemedText>
+        <ThemedText style={[styles.description, { color: Colors.icon }]}>{description}</ThemedText>
       ) : null}
 
       {actionLabel && onAction ? (
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.tint }]}
+          style={[styles.button, { backgroundColor: Colors.tint }]}
           onPress={onAction}
           accessibilityRole="button">
-          <ThemedText style={styles.buttonText} lightColor="#fff" darkColor="#fff">
+          <ThemedText style={styles.buttonText} color="#fff">
             {actionLabel}
           </ThemedText>
         </TouchableOpacity>

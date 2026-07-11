@@ -3,7 +3,6 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CardStateBadge } from '@/components/card-state-badge';
 import { ThemedText } from '@/components/themed-text';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { Card } from '@/src/types/card';
 
 type CardListItemProps = {
@@ -12,15 +11,12 @@ type CardListItemProps = {
 };
 
 export function CardListItem({ card, onPress }: CardListItemProps) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-
   const title = card.matched_name ?? card.ocr_parsed_name ?? 'Unrecognized card';
   const subtitle = card.matched_set_name;
 
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} accessibilityRole="button">
-      <View style={[styles.thumbnail, { backgroundColor: `${colors.icon}22` }]}>
+      <View style={[styles.thumbnail, { backgroundColor: `${Colors.icon}22` }]}>
         {card.thumbnail_base64 ? (
           <Image
             source={{ uri: `data:image/jpeg;base64,${card.thumbnail_base64}` }}
@@ -34,7 +30,7 @@ export function CardListItem({ card, onPress }: CardListItemProps) {
           {title}
         </ThemedText>
         {subtitle ? (
-          <ThemedText style={[styles.subtitle, { color: colors.icon }]} numberOfLines={1}>
+          <ThemedText style={[styles.subtitle, { color: Colors.icon }]} numberOfLines={1}>
             {subtitle}
           </ThemedText>
         ) : null}

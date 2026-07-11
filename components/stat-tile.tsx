@@ -3,7 +3,6 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type StatTileProps = {
   icon: IconSymbolName;
@@ -12,16 +11,13 @@ type StatTileProps = {
 };
 
 export function StatTile({ icon, value, label }: StatTileProps) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-
   return (
     <View style={styles.tile}>
-      <IconSymbol name={icon} size={20} color={colors.tint} />
+      <IconSymbol name={icon} size={20} color={Colors.tint} />
       <ThemedText type="defaultSemiBold" style={styles.value}>
         {value}
       </ThemedText>
-      <ThemedText style={[styles.label, { color: colors.icon }]}>{label}</ThemedText>
+      <ThemedText style={[styles.label, { color: Colors.icon }]}>{label}</ThemedText>
     </View>
   );
 }

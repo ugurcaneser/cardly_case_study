@@ -5,14 +5,10 @@ import { StatTile } from '@/components/stat-tile';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCardsQuery, useCollectionsQuery } from '@/src/services/api/queries';
 import { calculateEstimatedValueUsd } from '@/src/utils/cardStats';
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-
   const cardsQuery = useCardsQuery();
   const collectionsQuery = useCollectionsQuery();
 
@@ -24,14 +20,14 @@ export default function HomeScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.hero}>
         <ThemedText type="title">Cardly</ThemedText>
-        <ThemedText style={[styles.heroSubtitle, { color: colors.icon }]}>
+        <ThemedText style={[styles.heroSubtitle, { color: Colors.icon }]}>
           Scan a card to identify it and track your collection.
         </ThemedText>
         <TouchableOpacity
-          style={[styles.scanButton, { backgroundColor: colors.tint }]}
+          style={[styles.scanButton, { backgroundColor: Colors.tint }]}
           onPress={() => router.push('/capture')}
           accessibilityRole="button">
-          <ThemedText style={styles.scanButtonText} lightColor="#fff" darkColor="#fff">
+          <ThemedText style={styles.scanButtonText} color="#fff">
             Scan Now
           </ThemedText>
         </TouchableOpacity>

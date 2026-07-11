@@ -7,12 +7,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
 
 export default function CaptureScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
   const step = useCaptureStore((state) => state.step);
   const previewUri = useCaptureStore((state) => state.previewUri);
   const setCaptured = useCaptureStore((state) => state.setCaptured);
@@ -76,17 +73,17 @@ export default function CaptureScreen() {
           onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Close">
-          <IconSymbol name="xmark" size={24} color={colors.text} />
+          <IconSymbol name="xmark" size={24} color={Colors.text} />
         </TouchableOpacity>
 
         <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="contain" />
 
         <View style={styles.actions}>
           <TouchableOpacity
-            style={[styles.secondaryButton, { borderColor: colors.tint }]}
+            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
             onPress={handleRetake}
             accessibilityRole="button">
-            <ThemedText style={[styles.secondaryButtonText, { color: colors.tint }]}>
+            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
               Retake
             </ThemedText>
           </TouchableOpacity>
@@ -102,13 +99,13 @@ export default function CaptureScreen() {
         onPress={handleClose}
         accessibilityRole="button"
         accessibilityLabel="Close">
-        <IconSymbol name="xmark" size={24} color={colors.text} />
+        <IconSymbol name="xmark" size={24} color={Colors.text} />
       </TouchableOpacity>
 
       <View style={styles.hero}>
-        <IconSymbol name="camera.fill" size={48} color={colors.tint} />
+        <IconSymbol name="camera.fill" size={48} color={Colors.tint} />
         <ThemedText type="title">Scan a Card</ThemedText>
-        <ThemedText style={[styles.subtitle, { color: colors.icon }]}>
+        <ThemedText style={[styles.subtitle, { color: Colors.icon }]}>
           Take a photo or choose one from your library.
         </ThemedText>
       </View>
@@ -117,22 +114,22 @@ export default function CaptureScreen() {
 
       <View style={styles.buttons}>
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: colors.tint }]}
+          style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
           onPress={handleTakePhoto}
           disabled={isPicking}
           accessibilityRole="button">
           <IconSymbol name="camera.fill" size={20} color="#fff" />
-          <ThemedText style={styles.primaryButtonText} lightColor="#fff" darkColor="#fff">
+          <ThemedText style={styles.primaryButtonText} color="#fff">
             Take Photo
           </ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.secondaryButton, { borderColor: colors.tint }]}
+          style={[styles.secondaryButton, { borderColor: Colors.tint }]}
           onPress={handleChooseFromLibrary}
           disabled={isPicking}
           accessibilityRole="button">
-          <ThemedText style={[styles.secondaryButtonText, { color: colors.tint }]}>
+          <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
             Choose from Library
           </ThemedText>
         </TouchableOpacity>

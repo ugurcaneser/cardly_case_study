@@ -16,7 +16,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCollectionsQuery, useCreateCollectionMutation } from '@/src/services/api/queries';
 import type { Collection } from '@/src/types/collection';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -24,9 +23,6 @@ import { getErrorMessage } from '@/src/utils/errors';
 type GridItem = { kind: 'create' } | { kind: 'collection'; collection: Collection };
 
 export default function CollectionsScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-
   const collectionsQuery = useCollectionsQuery();
   const createCollectionMutation = useCreateCollectionMutation();
 
@@ -96,11 +92,11 @@ export default function CollectionsScreen() {
           renderItem={({ item }) =>
             item.kind === 'create' ? (
               <TouchableOpacity
-                style={[styles.tile, styles.createTile, { borderColor: colors.tint }]}
+                style={[styles.tile, styles.createTile, { borderColor: Colors.tint }]}
                 onPress={openCreateModal}
                 accessibilityRole="button">
-                <IconSymbol name="plus" size={28} color={colors.tint} />
-                <ThemedText style={[styles.createLabel, { color: colors.tint }]}>
+                <IconSymbol name="plus" size={28} color={Colors.tint} />
+                <ThemedText style={[styles.createLabel, { color: Colors.tint }]}>
                   Create New
                 </ThemedText>
               </TouchableOpacity>
@@ -120,12 +116,12 @@ export default function CollectionsScreen() {
         animationType="fade"
         onRequestClose={() => setCreateModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <ThemedView style={[styles.modalCard, { borderColor: colors.icon }]}>
+          <ThemedView style={[styles.modalCard, { borderColor: Colors.icon }]}>
             <ThemedText type="subtitle">New Collection</ThemedText>
             <TextInput
-              style={[styles.input, { borderColor: colors.icon, color: colors.text }]}
+              style={[styles.input, { borderColor: Colors.icon, color: Colors.text }]}
               placeholder="Collection name"
-              placeholderTextColor={colors.icon}
+              placeholderTextColor={Colors.icon}
               value={newCollectionName}
               onChangeText={setNewCollectionName}
               autoFocus
@@ -145,7 +141,7 @@ export default function CollectionsScreen() {
                 onPress={handleCreate}
                 disabled={createCollectionMutation.isPending || !newCollectionName.trim()}
                 accessibilityRole="button">
-                <ThemedText style={[styles.createLabel, { color: colors.tint }]}>
+                <ThemedText style={[styles.createLabel, { color: Colors.tint }]}>
                   {createCollectionMutation.isPending ? 'Creating…' : 'Create'}
                 </ThemedText>
               </TouchableOpacity>
