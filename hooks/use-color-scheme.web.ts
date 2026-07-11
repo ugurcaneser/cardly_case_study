@@ -1,21 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
-
-/**
- * To support static rendering, this value needs to be re-calculated on the client side for web
- */
-export function useColorScheme() {
-  const [hasHydrated, setHasHydrated] = useState(false);
-
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
-
-  const colorScheme = useRNColorScheme();
-
-  if (hasHydrated) {
-    return colorScheme;
-  }
-
+// Cardly ships a single, fixed light UI style — the app does not follow the
+// system light/dark setting. Keeping this as a hook (rather than inlining
+// 'light' everywhere) means every existing call site keeps working unchanged.
+export function useColorScheme(): 'light' {
   return 'light';
 }
