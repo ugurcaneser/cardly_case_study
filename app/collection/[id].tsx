@@ -68,6 +68,7 @@ export default function CollectionDetailScreen() {
   if (collectionQuery.isPending) {
     return (
       <ThemedView style={styles.centered}>
+        <Stack.Screen options={{ title: 'Collection' }} />
         <ActivityIndicator accessibilityLabel="Loading" />
       </ThemedView>
     );
@@ -75,13 +76,16 @@ export default function CollectionDetailScreen() {
 
   if (collectionQuery.isError) {
     return (
-      <EmptyState
-        icon="folder.fill"
-        title="Couldn't load this collection"
-        description="Check your connection and try again."
-        actionLabel="Retry"
-        onAction={() => collectionQuery.refetch()}
-      />
+      <>
+        <Stack.Screen options={{ title: 'Collection' }} />
+        <EmptyState
+          icon="folder.fill"
+          title="Couldn't load this collection"
+          description="Check your connection and try again."
+          actionLabel="Retry"
+          onAction={() => collectionQuery.refetch()}
+        />
+      </>
     );
   }
 

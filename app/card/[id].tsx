@@ -59,6 +59,7 @@ export default function CardDetailScreen() {
   if (cardQuery.isPending) {
     return (
       <ThemedView style={styles.centered}>
+        <Stack.Screen options={{ title: 'Card' }} />
         <ActivityIndicator accessibilityLabel="Loading" />
       </ThemedView>
     );
@@ -66,13 +67,16 @@ export default function CardDetailScreen() {
 
   if (cardQuery.isError) {
     return (
-      <EmptyState
-        icon="clock.fill"
-        title="Couldn't load this card"
-        description="Check your connection and try again."
-        actionLabel="Retry"
-        onAction={() => cardQuery.refetch()}
-      />
+      <>
+        <Stack.Screen options={{ title: 'Card' }} />
+        <EmptyState
+          icon="clock.fill"
+          title="Couldn't load this card"
+          description="Check your connection and try again."
+          actionLabel="Retry"
+          onAction={() => cardQuery.refetch()}
+        />
+      </>
     );
   }
 
