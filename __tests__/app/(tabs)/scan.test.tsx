@@ -105,24 +105,6 @@ describe('ScanScreen', () => {
     expect(screen.getByText('Choose from Library')).toBeTruthy();
   });
 
-  it('resets and returns to Home when the close button is pressed on the idle step', async () => {
-    await renderScanScreen();
-
-    await fireEvent.press(screen.getByLabelText('Close'));
-
-    expect(router.replace).toHaveBeenCalledWith('/');
-  });
-
-  it('discards the in-progress capture when the close button is pressed on the captured step', async () => {
-    await captureAPhoto();
-
-    await fireEvent.press(screen.getByLabelText('Close'));
-
-    expect(router.replace).toHaveBeenCalledWith('/');
-    expect(useCaptureStore.getState().step).toBe('idle');
-    expect(useCaptureStore.getState().previewUri).toBeNull();
-  });
-
   it('shows an error and never opens the camera when permission is denied', async () => {
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
 
@@ -203,9 +185,6 @@ describe('ScanScreen', () => {
     expect(useCaptureStore.getState().step).toBe('reviewing');
     expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZE_STARTED);
     expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZED, { status: 'matched' });
-    // Once analysis has produced a result, "Save"/"Retake" are the
-    // deliberate exits — the close button is idle/captured-only.
-    expect(screen.queryByLabelText('Close')).toBeNull();
   });
 
   it('analyzes the card and shows the unrecognized review view', async () => {

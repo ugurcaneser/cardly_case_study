@@ -8,7 +8,6 @@ import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
 import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { GlassIconButton } from '@/components/ui/glass-icon-button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { SecondaryButton } from '@/components/ui/secondary-button';
@@ -148,18 +147,9 @@ export default function ScanScreen() {
     reset();
   }
 
-  function handleClose() {
-    reset();
-    router.replace('/');
-  }
-
   const containerInsetStyle = { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 };
 
   let content: ReactNode;
-  // The close button is only offered on the two steps where nothing is
-  // in flight (idle and captured-but-not-yet-analyzed) — once analysis or
-  // saving has started, "Discard"/"Retake" are the deliberate exits instead.
-  let showCloseButton = false;
 
   if (step === 'saving') {
     content = (
@@ -235,7 +225,6 @@ export default function ScanScreen() {
       </ThemedView>
     );
   } else if (step === 'captured' && previewUri) {
-    showCloseButton = true;
     content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <View style={styles.previewFrame}>
@@ -249,7 +238,6 @@ export default function ScanScreen() {
       </ThemedView>
     );
   } else {
-    showCloseButton = true;
     content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <View style={styles.hero}>
@@ -281,31 +269,10 @@ export default function ScanScreen() {
     );
   }
 
-  return (
-    <View style={styles.root}>
-      {content}
-      {showCloseButton ? (
-        <GlassIconButton
-          onPress={handleClose}
-          style={[styles.closeButton, { top: insets.top + 12 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Close">
-          <IconSymbol name="xmark" size={20} color={Colors.onSurface} />
-        </GlassIconButton>
-      ) : null}
-    </View>
-  );
+  return content;
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  closeButton: {
-    position: 'absolute',
-    left: Spacing.containerMargin,
-    zIndex: 10,
-  },
   container: {
     flex: 1,
     alignItems: 'center',
