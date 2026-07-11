@@ -4,9 +4,11 @@ import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/c
 import {
   addCardToCollection,
   createCollection,
+  deleteCollection,
   getCollection,
   listCollections,
   removeCardFromCollection,
+  renameCollection,
 } from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { queryKeys } from '@/src/constants/query-keys';
@@ -62,6 +64,28 @@ export function useCreateCollectionMutation() {
 
   return useMutation({
     mutationFn: (input: CollectionCreateInput) => createCollection(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useRenameCollectionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => renameCollection(id, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useDeleteCollectionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteCollection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.collections });
     },

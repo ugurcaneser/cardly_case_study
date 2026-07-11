@@ -1,19 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { CollectionTile } from '@/components/collection-tile';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TextInputModal } from '@/components/text-input-modal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useCollectionsQuery, useCreateCollectionMutation } from '@/src/services/api/queries';
@@ -27,23 +20,14 @@ export default function CollectionsScreen() {
   const createCollectionMutation = useCreateCollectionMutation();
 
   const [isCreateModalVisible, setCreateModalVisible] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
 
   function openCreateModal() {
     createCollectionMutation.reset();
-    setNewCollectionName('');
     setCreateModalVisible(true);
   }
 
-  function handleCreate() {
-    const name = newCollectionName.trim();
-    if (!name) {
-      return;
-    }
-    createCollectionMutation.mutate(
-      { name },
-      { onSuccess: () => setCreateModalVisible(false) }
-    );
+  function handleCreate(name: string) {
+    createCollectionMutation.mutate({ name }, { onSuccess: () => setCreateModalVisible(false) });
   }
 
   if (collectionsQuery.isPending) {
@@ -110,45 +94,19 @@ export default function CollectionsScreen() {
         />
       )}
 
-      <Modal
+      <TextInputModal
         visible={isCreateModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setCreateModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <ThemedView style={[styles.modalCard, { borderColor: Colors.icon }]}>
-            <ThemedText type="subtitle">New Collection</ThemedText>
-            <TextInput
-              style={[styles.input, { borderColor: Colors.icon, color: Colors.text }]}
-              placeholder="Collection name"
-              placeholderTextColor={Colors.icon}
-              value={newCollectionName}
-              onChangeText={setNewCollectionName}
-              autoFocus
-            />
-            {createCollectionMutation.isError ? (
-              <ThemedText style={styles.errorText}>
-                {getErrorMessage(createCollectionMutation.error)}
-              </ThemedText>
-            ) : null}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                onPress={() => setCreateModalVisible(false)}
-                accessibilityRole="button">
-                <ThemedText>Cancel</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCreate}
-                disabled={createCollectionMutation.isPending || !newCollectionName.trim()}
-                accessibilityRole="button">
-                <ThemedText style={[styles.createLabel, { color: Colors.tint }]}>
-                  {createCollectionMutation.isPending ? 'Creating…' : 'Create'}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </ThemedView>
-        </View>
-      </Modal>
+        title="New Collection"
+        placeholder="Collection name"
+        confirmLabel="Create"
+        submittingLabel="Creating…"
+        isSubmitting={createCollectionMutation.isPending}
+        errorMessage={
+          createCollectionMutation.isError ? getErrorMessage(createCollectionMutation.error) : null
+        }
+        onCancel={() => setCreateModalVisible(false)}
+        onConfirm={handleCreate}
+      />
     </ThemedView>
   );
 }
@@ -185,35 +143,5 @@ const styles = StyleSheet.create({
   },
   createLabel: {
     fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  modalCard: {
-    width: '100%',
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  errorText: {
-    color: '#991B1B',
-    fontSize: 13,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 24,
-    marginTop: 4,
   },
 });

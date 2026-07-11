@@ -3,13 +3,19 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import React from 'react';
+import { Alert } from 'react-native';
 
 import CollectionDetailScreen from '@/app/collection/[id]';
-import { getCollection, removeCardFromCollection } from '@/src/services/api/collectionsClient';
+import {
+  deleteCollection,
+  getCollection,
+  removeCardFromCollection,
+  renameCollection,
+} from '@/src/services/api/collectionsClient';
 import { makeCard } from '@/src/testing/cardFixtures';
 
 jest.mock('expo-router', () => ({
-  router: { push: jest.fn() },
+  router: { push: jest.fn(), back: jest.fn() },
   useLocalSearchParams: jest.fn(),
   Stack: { Screen: () => null },
 }));
@@ -110,5 +116,69 @@ describe('CollectionDetailScreen', () => {
     await renderCollectionDetail();
 
     await waitFor(() => expect(screen.getByLabelText('Remove this card from collection')).toBeTruthy());
+  });
+
+  it('renames the collection', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+    (renameCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Modern', card_count: 0 });
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Rename'));
+    expect(screen.getByDisplayValue('Vintage')).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByDisplayValue('Vintage'), 'Modern');
+    await fireEvent.press(screen.getByText('Save'));
+
+    await waitFor(() => expect(renameCollection).toHaveBeenCalledWith(1, 'Modern'));
+    await waitFor(() => expect(screen.queryByDisplayValue('Modern')).toBeNull());
+  });
+
+  it('shows the backend error message and keeps the rename modal open on a duplicate name', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+    (renameCollection as jest.Mock).mockRejectedValue(new Error('Collection name already exists'));
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Rename'));
+    await fireEvent.press(screen.getByText('Save'));
+
+    await waitFor(() => expect(screen.getByText('Collection name already exists')).toBeTruthy());
+    expect(screen.getByDisplayValue('Vintage')).toBeTruthy();
+  });
+
+  it('deletes the collection and navigates back after confirming', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+    (deleteCollection as jest.Mock).mockResolvedValue(undefined);
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      const destructiveButton = buttons?.find((button) => button.style === 'destructive');
+      destructiveButton?.onPress?.();
+    });
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Delete Collection'));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    expect(deleteCollection).toHaveBeenCalledWith(1);
+
+    alertSpy.mockRestore();
+  });
+
+  it('does not delete the collection when the confirmation is canceled', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Delete Collection'));
+
+    expect(deleteCollection).not.toHaveBeenCalled();
+
+    alertSpy.mockRestore();
   });
 });

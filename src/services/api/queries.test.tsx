@@ -7,9 +7,11 @@ import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/c
 import {
   addCardToCollection,
   createCollection,
+  deleteCollection,
   getCollection,
   listCollections,
   removeCardFromCollection,
+  renameCollection,
 } from '@/src/services/api/collectionsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 
@@ -22,8 +24,10 @@ import {
   useCreateCardMutation,
   useCreateCollectionMutation,
   useDeleteCardMutation,
+  useDeleteCollectionMutation,
   useEnrichMutation,
   useRemoveCardFromCollectionMutation,
+  useRenameCollectionMutation,
 } from './queries';
 
 jest.mock('@/src/services/api/cardsClient');
@@ -253,6 +257,70 @@ describe('useCreateCollectionMutation', () => {
     });
 
     result.current.mutate({ name: 'Vintage' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useRenameCollectionMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls renameCollection with the id and new name', async () => {
+    (renameCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Modern', card_count: 0 });
+
+    const { result } = await renderHook(() => useRenameCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ id: 1, name: 'Modern' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(renameCollection).toHaveBeenCalledWith(1, 'Modern');
+  });
+
+  it('surfaces an error when renaming fails (e.g. duplicate name)', async () => {
+    (renameCollection as jest.Mock).mockRejectedValue(new Error('Collection name already exists'));
+
+    const { result } = await renderHook(() => useRenameCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ id: 1, name: 'Modern' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useDeleteCollectionMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls deleteCollection with the id', async () => {
+    (deleteCollection as jest.Mock).mockResolvedValue(undefined);
+
+    const { result } = await renderHook(() => useDeleteCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate(1);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(deleteCollection).toHaveBeenCalledWith(1);
+  });
+
+  it('surfaces an error when deletion fails', async () => {
+    (deleteCollection as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useDeleteCollectionMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate(1);
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });

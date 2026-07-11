@@ -1,13 +1,22 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { CardListItem } from '@/components/card-list-item';
 import { EmptyState } from '@/components/empty-state';
+import { TextInputModal } from '@/components/text-input-modal';
+import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useCollectionQuery, useRemoveCardFromCollectionMutation } from '@/src/services/api/queries';
+import {
+  useCollectionQuery,
+  useDeleteCollectionMutation,
+  useRemoveCardFromCollectionMutation,
+  useRenameCollectionMutation,
+} from '@/src/services/api/queries';
 import type { Card } from '@/src/types/card';
+import { getErrorMessage } from '@/src/utils/errors';
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,6 +24,36 @@ export default function CollectionDetailScreen() {
 
   const collectionQuery = useCollectionQuery(collectionId);
   const removeCardMutation = useRemoveCardFromCollectionMutation();
+  const renameCollectionMutation = useRenameCollectionMutation();
+  const deleteCollectionMutation = useDeleteCollectionMutation();
+
+  const [isRenameModalVisible, setRenameModalVisible] = useState(false);
+
+  function openRenameModal() {
+    renameCollectionMutation.reset();
+    setRenameModalVisible(true);
+  }
+
+  function handleRename(name: string) {
+    renameCollectionMutation.mutate(
+      { id: collectionId, name },
+      { onSuccess: () => setRenameModalVisible(false) }
+    );
+  }
+
+  function handleDelete() {
+    Alert.alert('Delete this collection?', "This won't delete the cards inside it.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteCollectionMutation.mutateAsync(collectionId);
+          router.back();
+        },
+      },
+    ]);
+  }
 
   if (collectionQuery.isPending) {
     return (
@@ -41,6 +80,15 @@ export default function CollectionDetailScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: collection.name }} />
+
+      <View style={styles.actionsRow}>
+        <TouchableOpacity onPress={openRenameModal} accessibilityRole="button">
+          <ThemedText style={[styles.actionText, { color: Colors.tint }]}>Rename</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDelete} accessibilityRole="button">
+          <ThemedText style={[styles.actionText, { color: '#991B1B' }]}>Delete Collection</ThemedText>
+        </TouchableOpacity>
+      </View>
 
       {collection.cards.length === 0 ? (
         <EmptyState
@@ -72,6 +120,21 @@ export default function CollectionDetailScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
+
+      <TextInputModal
+        visible={isRenameModalVisible}
+        title="Rename Collection"
+        placeholder="Collection name"
+        initialValue={collection.name}
+        confirmLabel="Save"
+        submittingLabel="Saving…"
+        isSubmitting={renameCollectionMutation.isPending}
+        errorMessage={
+          renameCollectionMutation.isError ? getErrorMessage(renameCollectionMutation.error) : null
+        }
+        onCancel={() => setRenameModalVisible(false)}
+        onConfirm={handleRename}
+      />
     </ThemedView>
   );
 }
@@ -84,6 +147,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  actionText: {
+    fontWeight: '600',
+    fontSize: 14,
   },
   listContent: {
     paddingHorizontal: 16,
