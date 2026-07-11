@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { RecentCardTile } from '@/components/recent-card-tile';
 import { StatTile } from '@/components/stat-tile';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,6 +13,8 @@ import { Colors, Spacing } from '@/constants/theme';
 import { useCardsQuery, useCollectionsQuery } from '@/src/services/api/queries';
 import { calculateEstimatedValueUsd } from '@/src/utils/cardStats';
 
+const RECENT_CARDS_LIMIT = 8;
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const cardsQuery = useCardsQuery();
@@ -20,6 +23,8 @@ export default function HomeScreen() {
   const cardCount = cardsQuery.data?.length ?? 0;
   const collectionCount = collectionsQuery.data?.length ?? 0;
   const estimatedValue = calculateEstimatedValueUsd(cardsQuery.data ?? []);
+  // Backend already returns cards newest-first.
+  const recentCards = (cardsQuery.data ?? []).slice(0, RECENT_CARDS_LIMIT);
 
   return (
     <ThemedView style={styles.container}>
@@ -46,6 +51,28 @@ export default function HomeScreen() {
           <StatTile emoji="💰" value={`$${estimatedValue.toFixed(2)}`} label="Est. Value" />
           <StatTile emoji="📚" value={String(collectionCount)} label="Collections" />
         </View>
+
+        {recentCards.length > 0 ? (
+          <View style={styles.recentSection}>
+            <View style={styles.recentHeader}>
+              <ThemedText type="titleLg">Recent Cards</ThemedText>
+              <ThemedText
+                type="bodyMd"
+                style={{ color: Colors.primary }}
+                onPress={() => router.push('/history')}>
+                See All
+              </ThemedText>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentRow}>
+              {recentCards.map((card) => (
+                <RecentCardTile key={card.id} card={card} onPress={() => router.push(`/card/${card.id}`)} />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
       </ScrollView>
     </ThemedView>
   );
@@ -72,6 +99,17 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    gap: Spacing.gutterBento,
+  },
+  recentSection: {
+    gap: Spacing.stackMd,
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  recentRow: {
     gap: Spacing.gutterBento,
   },
 });

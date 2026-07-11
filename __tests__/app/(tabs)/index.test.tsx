@@ -52,4 +52,31 @@ describe('HomeScreen', () => {
 
     expect(router.push).toHaveBeenCalledWith('/capture');
   });
+
+  it('renders a Recent Cards section and navigates to a card on press', async () => {
+    (listCards as jest.Mock).mockResolvedValue([
+      { id: 7, status: 'enriched', matched_name: 'Lightning Bolt', matched_data: null },
+    ]);
+    (listCollections as jest.Mock).mockResolvedValue([]);
+
+    await renderHome();
+
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Lightning Bolt'));
+    expect(router.push).toHaveBeenCalledWith('/card/7');
+
+    await fireEvent.press(screen.getByText('See All'));
+    expect(router.push).toHaveBeenCalledWith('/history');
+  });
+
+  it('hides the Recent Cards section when there are no cards', async () => {
+    (listCards as jest.Mock).mockResolvedValue([]);
+    (listCollections as jest.Mock).mockResolvedValue([]);
+
+    await renderHome();
+
+    await waitFor(() => expect(screen.getByText('Scan Now')).toBeTruthy());
+    expect(screen.queryByText('Recent Cards')).toBeNull();
+  });
 });
