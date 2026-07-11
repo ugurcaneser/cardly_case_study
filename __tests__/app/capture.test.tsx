@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 import React from 'react';
 
 import CaptureScreen from '@/app/capture';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { createCard } from '@/src/services/api/cardsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { storeCardImage } from '@/src/services/files/imageStorage';
@@ -26,6 +28,7 @@ jest.mock('expo-image-picker', () => ({
 
 jest.mock('@/src/services/api/cardsClient');
 jest.mock('@/src/services/api/enrichClient');
+jest.mock('@/src/services/analytics/logger');
 jest.mock('@/src/services/files/imageStorage');
 // Explicit factory (not an automock) — automocking would still `require` the
 // real module to introspect its exports, which pulls in AsyncStorage's
@@ -131,6 +134,7 @@ describe('CaptureScreen', () => {
       step: 'captured',
       previewUri: 'file:///tmp/photo.jpg',
     });
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_CAPTURED);
   });
 
   it('imports from the library when permission is granted', async () => {
@@ -174,6 +178,8 @@ describe('CaptureScreen', () => {
     expect(enrichCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
     expect(screen.getByText('Masters 25 · #133 · Common')).toBeTruthy();
     expect(useCaptureStore.getState().step).toBe('reviewing');
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZE_STARTED);
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZED, { status: 'matched' });
   });
 
   it('analyzes the card and shows the unrecognized review view', async () => {
@@ -183,6 +189,7 @@ describe('CaptureScreen', () => {
     await fireEvent.press(screen.getByText('Analyze Card'));
 
     await waitFor(() => expect(screen.getByText('Card not recognized')).toBeTruthy());
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZED, { status: 'unrecognized' });
   });
 
   it('saves an unrecognized card with its OCR fields and no matched_* fields', async () => {
@@ -207,6 +214,7 @@ describe('CaptureScreen', () => {
       ocr_parsed_name: null,
       ocr_parsed_number: null,
     });
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_SAVED, { cardId: 12, status: 'unrecognized' });
   });
 
   it('shows an escalating cold-start hint while the submitting step is active', async () => {
@@ -253,6 +261,9 @@ describe('CaptureScreen', () => {
 
     await waitFor(() => expect(screen.getByText("Couldn't analyze this card")).toBeTruthy());
     expect(screen.getByText('OCR provider error')).toBeTruthy();
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZE_FAILED, {
+      message: 'OCR provider error',
+    });
   });
 
   it('retries analysis from the error step', async () => {
@@ -315,6 +326,7 @@ describe('CaptureScreen', () => {
     });
     expect(setLocalImageUri).toHaveBeenCalledWith(7, 'file:///document/cards/card-1.jpg');
     expect(useCaptureStore.getState().step).toBe('idle');
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_SAVED, { cardId: 7, status: 'enriched' });
   });
 
   it('saves without analysis from the error step and navigates to its detail screen', async () => {
@@ -335,5 +347,25 @@ describe('CaptureScreen', () => {
 
     expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64DATA' });
     expect(setLocalImageUri).toHaveBeenCalledWith(9, 'file:///document/cards/card-1.jpg');
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_SAVED, { cardId: 9, status: 'pending' });
+  });
+
+  it('tracks a save failure and stays on the error step', async () => {
+    (enrichCardImage as jest.Mock).mockResolvedValue(matchedResult);
+    (storeCardImage as jest.Mock).mockResolvedValue({
+      localUri: 'file:///document/cards/card-1.jpg',
+      thumbnailBase64: 'BASE64DATA',
+    });
+    (createCard as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Save'));
+
+    await waitFor(() => expect(screen.getByText('network down')).toBeTruthy());
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_SAVE_FAILED, { message: 'network down' });
   });
 });

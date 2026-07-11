@@ -9,6 +9,8 @@ import { ThemedView } from '@/components/themed-view';
 import { TextInputModal } from '@/components/text-input-modal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { useCollectionsQuery, useCreateCollectionMutation } from '@/src/services/api/queries';
 import type { Collection } from '@/src/types/collection';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -27,7 +29,15 @@ export default function CollectionsScreen() {
   }
 
   function handleCreate(name: string) {
-    createCollectionMutation.mutate({ name }, { onSuccess: () => setCreateModalVisible(false) });
+    createCollectionMutation.mutate(
+      { name },
+      {
+        onSuccess: (collection) => {
+          track(AnalyticsEvents.COLLECTION_CREATED, { collectionId: collection.id, name });
+          setCreateModalVisible(false);
+        },
+      }
+    );
   }
 
   if (collectionsQuery.isPending) {

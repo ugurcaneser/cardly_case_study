@@ -3,11 +3,14 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import type { ReactNode } from 'react';
 import React from 'react';
 
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { addCardToCollection, listCollections, removeCardFromCollection } from '@/src/services/api/collectionsClient';
 
 import { CollectionPickerSheet } from './collection-picker-sheet';
 
 jest.mock('@/src/services/api/collectionsClient');
+jest.mock('@/src/services/analytics/logger');
 
 async function renderSheet(props: Partial<React.ComponentProps<typeof CollectionPickerSheet>> = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -58,6 +61,10 @@ describe('CollectionPickerSheet', () => {
 
     await waitFor(() => expect(addCardToCollection).toHaveBeenCalledWith(1, 7));
     await waitFor(() => expect(listCollections).toHaveBeenCalledTimes(2));
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ADDED_TO_COLLECTION, {
+      collectionId: 1,
+      cardId: 7,
+    });
     // React Query's notifyManager batches the resulting state update via a
     // real setTimeout(0), one tick after the refetch promise itself
     // resolves - flush it here so it lands before cleanup, not after.
@@ -82,6 +89,10 @@ describe('CollectionPickerSheet', () => {
     await fireEvent.press(screen.getByText('Vintage'));
     await waitFor(() => expect(removeCardFromCollection).toHaveBeenCalledWith(1, 7));
     await waitFor(() => expect(listCollections).toHaveBeenCalledTimes(3));
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_REMOVED_FROM_COLLECTION, {
+      collectionId: 1,
+      cardId: 7,
+    });
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
   });
 

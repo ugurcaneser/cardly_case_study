@@ -5,6 +5,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import {
   useAddCardToCollectionMutation,
   useCollectionsQuery,
@@ -34,10 +36,16 @@ export function CollectionPickerSheet({ visible, cardId, onClose }: CollectionPi
     const next = new Set(selectedIds);
     if (next.has(collectionId)) {
       next.delete(collectionId);
-      removeMutation.mutate({ collectionId, cardId });
+      removeMutation.mutate(
+        { collectionId, cardId },
+        { onSuccess: () => track(AnalyticsEvents.CARD_REMOVED_FROM_COLLECTION, { collectionId, cardId }) }
+      );
     } else {
       next.add(collectionId);
-      addMutation.mutate({ collectionId, cardId });
+      addMutation.mutate(
+        { collectionId, cardId },
+        { onSuccess: () => track(AnalyticsEvents.CARD_ADDED_TO_COLLECTION, { collectionId, cardId }) }
+      );
     }
     setSelectedIds(next);
   }

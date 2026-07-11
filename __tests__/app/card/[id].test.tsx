@@ -6,6 +6,8 @@ import React from 'react';
 import { Alert } from 'react-native';
 
 import CardDetailScreen from '@/app/card/[id]';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { deleteCard, getCard } from '@/src/services/api/cardsClient';
 import { addCardToCollection, listCollections } from '@/src/services/api/collectionsClient';
 import { getLocalImageUri, removeLocalImageUri } from '@/src/services/files/localImageMap';
@@ -18,6 +20,7 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('@/src/services/api/cardsClient');
+jest.mock('@/src/services/analytics/logger');
 // CollectionPickerSheet is always mounted (just hidden) inside this screen,
 // so its own useCollectionsQuery call needs a mock here too.
 jest.mock('@/src/services/api/collectionsClient');
@@ -145,6 +148,10 @@ describe('CardDetailScreen', () => {
     await fireEvent.press(screen.getByText('Vintage'));
     await waitFor(() => expect(addCardToCollection).toHaveBeenCalledWith(1, 7));
     await waitFor(() => expect(listCollections).toHaveBeenCalledTimes(2));
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ADDED_TO_COLLECTION, {
+      collectionId: 1,
+      cardId: 7,
+    });
     // React Query's notifyManager batches the resulting state update via a
     // real setTimeout(0), one tick after the refetch promise itself
     // resolves - flush it here so it lands before cleanup, not after.
@@ -167,6 +174,7 @@ describe('CardDetailScreen', () => {
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     expect(deleteCard).toHaveBeenCalledWith(7);
     expect(removeLocalImageUri).toHaveBeenCalledWith(7);
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_DELETED, { cardId: 7 });
 
     alertSpy.mockRestore();
   });

@@ -9,6 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { useCardQuery, useDeleteCardMutation } from '@/src/services/api/queries';
 import { getLocalImageUri, removeLocalImageUri } from '@/src/services/files/localImageMap';
 import { capitalize, formatUsdPrice } from '@/src/utils/enrichmentCopy';
@@ -45,6 +47,7 @@ export default function CardDetailScreen() {
         onPress: async () => {
           await deleteCardMutation.mutateAsync(cardId);
           await removeLocalImageUri(cardId);
+          track(AnalyticsEvents.CARD_DELETED, { cardId });
           router.back();
         },
       },

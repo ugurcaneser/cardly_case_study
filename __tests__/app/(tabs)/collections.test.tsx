@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 import React from 'react';
 
 import CollectionsScreen from '@/app/(tabs)/collections';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { ApiError } from '@/src/services/api/client';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 
@@ -12,6 +14,7 @@ jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
 }));
 jest.mock('@/src/services/api/collectionsClient');
+jest.mock('@/src/services/analytics/logger');
 
 function renderCollections() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -89,6 +92,10 @@ describe('CollectionsScreen', () => {
 
     await waitFor(() => expect(createCollection).toHaveBeenCalledWith({ name: 'Modern' }));
     await waitFor(() => expect(screen.queryByPlaceholderText('Collection name')).toBeNull());
+    expect(track).toHaveBeenCalledWith(AnalyticsEvents.COLLECTION_CREATED, {
+      collectionId: 1,
+      name: 'Modern',
+    });
   });
 
   it('shows the backend error message and keeps the modal open on a duplicate name', async () => {

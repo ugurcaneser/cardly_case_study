@@ -9,6 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import {
   useCollectionQuery,
   useDeleteCollectionMutation,
@@ -37,7 +39,12 @@ export default function CollectionDetailScreen() {
   function handleRename(name: string) {
     renameCollectionMutation.mutate(
       { id: collectionId, name },
-      { onSuccess: () => setRenameModalVisible(false) }
+      {
+        onSuccess: () => {
+          track(AnalyticsEvents.COLLECTION_RENAMED, { collectionId, name });
+          setRenameModalVisible(false);
+        },
+      }
     );
   }
 
@@ -49,6 +56,7 @@ export default function CollectionDetailScreen() {
         style: 'destructive',
         onPress: async () => {
           await deleteCollectionMutation.mutateAsync(collectionId);
+          track(AnalyticsEvents.COLLECTION_DELETED, { collectionId });
           router.back();
         },
       },
@@ -108,7 +116,18 @@ export default function CollectionDetailScreen() {
                   <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
                 </View>
                 <TouchableOpacity
-                  onPress={() => removeCardMutation.mutate({ collectionId, cardId: item.id })}
+                  onPress={() =>
+                    removeCardMutation.mutate(
+                      { collectionId, cardId: item.id },
+                      {
+                        onSuccess: () =>
+                          track(AnalyticsEvents.CARD_REMOVED_FROM_COLLECTION, {
+                            collectionId,
+                            cardId: item.id,
+                          }),
+                      }
+                    )
+                  }
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${cardTitle} from collection`}
                   hitSlop={8}>

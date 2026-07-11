@@ -9,6 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { AnalyticsEvents } from '@/src/constants/analytics-events';
+import { track } from '@/src/services/analytics/logger';
 import { useCreateCardMutation, useEnrichMutation } from '@/src/services/api/queries';
 import { storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
@@ -59,6 +61,7 @@ export default function CaptureScreen() {
   function handlePickerResult(result: ImagePicker.ImagePickerResult) {
     if (!result.canceled) {
       setCaptured(result.assets[0].uri);
+      track(AnalyticsEvents.CARD_CAPTURED);
     }
   }
 
@@ -99,11 +102,15 @@ export default function CaptureScreen() {
       return;
     }
     startSubmitting();
+    track(AnalyticsEvents.CARD_ANALYZE_STARTED);
     try {
       const result = await enrichMutation.mutateAsync(previewUri);
       setReviewing(result);
+      track(AnalyticsEvents.CARD_ANALYZED, { status: result.status });
     } catch (error) {
-      setError(getErrorMessage(error));
+      const message = getErrorMessage(error);
+      setError(message);
+      track(AnalyticsEvents.CARD_ANALYZE_FAILED, { message });
     }
   }
 
@@ -118,10 +125,13 @@ export default function CaptureScreen() {
         buildCardCreateInput(stored.thumbnailBase64, enrichResult)
       );
       await setLocalImageUri(card.id, stored.localUri);
+      track(AnalyticsEvents.CARD_SAVED, { cardId: card.id, status: card.status });
       reset();
       router.replace(`/card/${card.id}`);
     } catch (error) {
-      setError(getErrorMessage(error));
+      const message = getErrorMessage(error);
+      setError(message);
+      track(AnalyticsEvents.CARD_SAVE_FAILED, { message });
     }
   }
 
