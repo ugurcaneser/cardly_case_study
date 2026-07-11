@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { useCardImageUri } from '@/hooks/use-card-image-uri';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { useCardQuery, useDeleteCardMutation } from '@/src/services/api/queries';
@@ -27,6 +28,13 @@ export default function CardDetailScreen() {
 
   const [localImageUri, setLocalImageUriState] = useState<string | null>(null);
   const [isPickerVisible, setPickerVisible] = useState(false);
+  const { uri: imageUri, onError: onImageError } = useCardImageUri(
+    {
+      matched_image_url: cardQuery.data?.matched_image_url ?? null,
+      thumbnail_base64: cardQuery.data?.thumbnail_base64 ?? null,
+    },
+    localImageUri
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -82,8 +90,6 @@ export default function CardDetailScreen() {
 
   const card = cardQuery.data;
   const title = card.matched_name ?? card.ocr_parsed_name ?? 'Unrecognized card';
-  const imageUri =
-    localImageUri ?? (card.thumbnail_base64 ? `data:image/jpeg;base64,${card.thumbnail_base64}` : null);
   const details = extractMatchedDetails(card.matched_data);
   const price = details.prices ? formatUsdPrice(details.prices) : null;
 
@@ -94,7 +100,14 @@ export default function CardDetailScreen() {
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <View style={[styles.imageWrapper, { backgroundColor: `${Colors.icon}22` }]}>
-          {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} resizeMode="contain" /> : null}
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+              resizeMode="contain"
+              onError={onImageError}
+            />
+          ) : null}
         </View>
 
         <CardStateBadge status={card.status} />

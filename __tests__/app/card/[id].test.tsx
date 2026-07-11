@@ -130,6 +130,22 @@ describe('CardDetailScreen', () => {
     await waitFor(() => expect(getLocalImageUri).toHaveBeenCalledWith(7));
   });
 
+  it('prefers the matched Scryfall image over the local file and the thumbnail', async () => {
+    (getCard as jest.Mock).mockResolvedValue(
+      makeCard({
+        id: 7,
+        thumbnail_base64: 'BASE64DATA',
+        matched_image_url: 'https://example.com/card.jpg',
+      })
+    );
+    (getLocalImageUri as jest.Mock).mockResolvedValue('file:///document/cards/card-7.jpg');
+
+    const { toJSON } = await renderCardDetail();
+
+    await waitFor(() => expect(JSON.stringify(toJSON())).toContain('https://example.com/card.jpg'));
+    expect(JSON.stringify(toJSON())).not.toContain('file:///document/cards/card-7.jpg');
+  });
+
   it('opens the collection picker sheet from "Add to Collection"', async () => {
     (getCard as jest.Mock).mockResolvedValue(makeCard({ id: 7, matched_name: 'Lightning Bolt' }));
     (listCollections as jest.Mock).mockResolvedValue([

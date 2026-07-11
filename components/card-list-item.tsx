@@ -3,6 +3,7 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CardStateBadge } from '@/components/card-state-badge';
 import { ThemedText } from '@/components/themed-text';
 import { Colors } from '@/constants/theme';
+import { useCardImageUri } from '@/hooks/use-card-image-uri';
 import type { Card } from '@/src/types/card';
 
 type CardListItemProps = {
@@ -13,15 +14,13 @@ type CardListItemProps = {
 export function CardListItem({ card, onPress }: CardListItemProps) {
   const title = card.matched_name ?? card.ocr_parsed_name ?? 'Unrecognized card';
   const subtitle = card.matched_set_name;
+  const { uri: imageUri, onError } = useCardImageUri(card);
 
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} accessibilityRole="button">
       <View style={[styles.thumbnail, { backgroundColor: `${Colors.icon}22` }]}>
-        {card.thumbnail_base64 ? (
-          <Image
-            source={{ uri: `data:image/jpeg;base64,${card.thumbnail_base64}` }}
-            style={styles.thumbnailImage}
-          />
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.thumbnailImage} onError={onError} />
         ) : null}
       </View>
 

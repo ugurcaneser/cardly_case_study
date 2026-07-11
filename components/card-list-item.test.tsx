@@ -41,6 +41,20 @@ describe('CardListItem', () => {
     expect(JSON.stringify(toJSON())).toContain('data:image/jpeg;base64,BASE64DATA');
   });
 
+  it('prefers the matched Scryfall image over the local thumbnail', async () => {
+    const { toJSON } = await render(
+      <CardListItem
+        card={makeCard({
+          thumbnail_base64: 'BASE64DATA',
+          matched_image_url: 'https://example.com/card.jpg',
+        })}
+      />
+    );
+
+    expect(JSON.stringify(toJSON())).toContain('https://example.com/card.jpg');
+    expect(JSON.stringify(toJSON())).not.toContain('data:image/jpeg;base64,BASE64DATA');
+  });
+
   it('renders the status badge for the card', async () => {
     await render(<CardListItem card={makeCard({ status: 'enriched' })} />);
 
