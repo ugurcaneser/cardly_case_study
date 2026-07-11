@@ -23,6 +23,7 @@ const MAPPING = {
   'folder.fill': 'folder',
   'dollarsign.circle.fill': 'attach-money',
   'camera.fill': 'camera-alt',
+  'gearshape.fill': 'settings',
   plus: 'add',
   trash: 'delete',
   checkmark: 'check',

@@ -50,6 +50,13 @@ export default function TabLayout() {
             tabBarIcon: ({ focused }) => <TabIcon name="folder.fill" focused={focused} />,
           }}
         />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ focused }) => <TabIcon name="gearshape.fill" focused={focused} />,
+          }}
+        />
       </Tabs>
       <CaptureTabButton />
     </View>
