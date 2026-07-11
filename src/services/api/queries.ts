@@ -41,6 +41,10 @@ export function useDeleteCardMutation() {
     mutationFn: (id: number) => deleteCard(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cards });
+      // A deleted card can still be a member of any number of collections —
+      // queryKeys.collections prefix-matches every queryKeys.collection(id),
+      // so this also refreshes any collection detail screen showing it.
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections });
     },
   });
 }

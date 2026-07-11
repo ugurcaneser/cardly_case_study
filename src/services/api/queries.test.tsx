@@ -122,6 +122,23 @@ describe('useDeleteCardMutation', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
+
+  it('invalidates collections too, so a collection list showing the deleted card refreshes', async () => {
+    (deleteCard as jest.Mock).mockResolvedValue(undefined);
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 1, cards: [] });
+
+    const wrapper = createWrapper();
+
+    const collectionHook = await renderHook(() => useCollectionQuery(1), { wrapper });
+    await waitFor(() => expect(collectionHook.result.current.isSuccess).toBe(true));
+    expect(getCollection).toHaveBeenCalledTimes(1);
+
+    const mutationHook = await renderHook(() => useDeleteCardMutation(), { wrapper });
+    mutationHook.result.current.mutate(7);
+
+    await waitFor(() => expect(mutationHook.result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(getCollection).toHaveBeenCalledTimes(2));
+  });
 });
 
 describe('useCreateCardMutation', () => {
