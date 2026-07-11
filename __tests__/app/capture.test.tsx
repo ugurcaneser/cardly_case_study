@@ -10,7 +10,7 @@ import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { createCard } from '@/src/services/api/cardsClient';
 import { enrichCardImage } from '@/src/services/api/enrichClient';
-import { storeCardImage } from '@/src/services/files/imageStorage';
+import { prepareImageForUpload, storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
 import type { EnrichResult } from '@/src/types/enrichment';
@@ -90,6 +90,7 @@ describe('CaptureScreen', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     useCaptureStore.getState().reset();
+    (prepareImageForUpload as jest.Mock).mockResolvedValue('file:///tmp/upload.jpg');
   });
 
   afterEach(() => {
@@ -185,7 +186,8 @@ describe('CaptureScreen', () => {
 
     await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
 
-    expect(enrichCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
+    expect(prepareImageForUpload).toHaveBeenCalledWith('file:///tmp/photo.jpg');
+    expect(enrichCardImage).toHaveBeenCalledWith('file:///tmp/upload.jpg');
     expect(screen.getByText('Masters 25 · #133 · Common')).toBeTruthy();
     expect(useCaptureStore.getState().step).toBe('reviewing');
     expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_ANALYZE_STARTED);

@@ -12,6 +12,15 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage(error)).toBe('Collection name already exists');
   });
 
+  it('falls back to the /enrich error body message when there is no detail', () => {
+    const error = new ApiError('Request failed with status 502', {
+      status: 502,
+      body: { status: 'error', code: 'OCR_PROVIDER_ERROR', message: 'OCR.space request failed: timeout' },
+    });
+
+    expect(getErrorMessage(error)).toBe('OCR.space request failed: timeout');
+  });
+
   it('falls back to a generic message when the ApiError body has no detail', () => {
     const error = new ApiError('Request failed with status 500', { status: 500, body: {} });
 

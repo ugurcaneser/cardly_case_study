@@ -9,8 +9,13 @@ export function getErrorMessage(
   // because ApiError extends Error and its own .message is just our wrapper
   // text ("Request failed with status 500"), not something to show a user.
   if (error instanceof ApiError) {
-    const body = error.body as { detail?: unknown } | undefined;
-    return typeof body?.detail === 'string' ? body.detail : fallback;
+    // Most endpoints raise FastAPI's HTTPException, whose body is {detail}.
+    // /enrich returns its own error shape, {status, code, message} — check
+    // both rather than assuming one.
+    const body = error.body as { detail?: unknown; message?: unknown } | undefined;
+    if (typeof body?.detail === 'string') return body.detail;
+    if (typeof body?.message === 'string') return body.message;
+    return fallback;
   }
 
   if (error instanceof Error && error.message) {

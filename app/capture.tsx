@@ -13,7 +13,7 @@ import { Colors } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { useCreateCardMutation, useEnrichMutation } from '@/src/services/api/queries';
-import { storeCardImage } from '@/src/services/files/imageStorage';
+import { prepareImageForUpload, storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
 import { buildCardCreateInput } from '@/src/utils/buildCardCreateInput';
@@ -106,7 +106,8 @@ export default function CaptureScreen() {
     startSubmitting();
     track(AnalyticsEvents.CARD_ANALYZE_STARTED);
     try {
-      const result = await enrichMutation.mutateAsync(previewUri);
+      const uploadUri = await prepareImageForUpload(previewUri);
+      const result = await enrichMutation.mutateAsync(uploadUri);
       setReviewing(result);
       track(AnalyticsEvents.CARD_ANALYZED, { status: result.status });
     } catch (error) {

@@ -4,6 +4,11 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 const CARDS_DIR_NAME = 'cards';
 const DISPLAY_MAX_WIDTH = 1600;
 const THUMBNAIL_MAX_WIDTH = 200;
+// OCR.space's free-tier API key rejects uploads over 1.5MB (E556). A raw
+// camera capture routinely lands at 4-8MB, so /enrich needs its own smaller,
+// lower-quality copy — separate from the 1600px display copy stored on save.
+const UPLOAD_MAX_WIDTH = 1200;
+const UPLOAD_COMPRESS_QUALITY = 0.5;
 
 export type StoredCardImage = {
   /** Persisted file:// URI of the compressed display-resolution copy. */
@@ -55,4 +60,21 @@ export async function storeCardImage(pickedUri: string): Promise<StoredCardImage
     localUri: destinationFile.uri,
     thumbnailBase64: thumbnailResult.base64,
   };
+}
+
+/**
+ * Produces a small, low-quality copy of a picked/captured photo suited to
+ * OCR upload — kept well under OCR.space's free-tier 1.5MB request limit.
+ * Result lives in the cache dir; callers don't need to clean it up.
+ */
+export async function prepareImageForUpload(pickedUri: string): Promise<string> {
+  const uploadImage = await ImageManipulator.manipulate(pickedUri)
+    .resize({ width: UPLOAD_MAX_WIDTH })
+    .renderAsync();
+  const uploadResult = await uploadImage.saveAsync({
+    compress: UPLOAD_COMPRESS_QUALITY,
+    format: SaveFormat.JPEG,
+  });
+
+  return uploadResult.uri;
 }
