@@ -26,6 +26,7 @@ const MAPPING = {
   plus: 'add',
   trash: 'delete',
   checkmark: 'check',
+  xmark: 'close',
 } as IconMapping;
 
 /**
