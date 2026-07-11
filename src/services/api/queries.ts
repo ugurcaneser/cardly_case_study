@@ -1,12 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { listCards } from '@/src/services/api/cardsClient';
+import { createCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 import { queryKeys } from '@/src/constants/query-keys';
+import type { CardCreateInput } from '@/src/types/card';
 import type { CollectionCreateInput } from '@/src/types/collection';
 
 export function useCardsQuery() {
   return useQuery({ queryKey: queryKeys.cards, queryFn: listCards });
+}
+
+export function useCreateCardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CardCreateInput) => createCard(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards });
+    },
+  });
 }
 
 export function useCollectionsQuery() {

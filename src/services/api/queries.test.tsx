@@ -3,10 +3,15 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import { listCards } from '@/src/services/api/cardsClient';
+import { createCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
 
-import { useCardsQuery, useCollectionsQuery, useCreateCollectionMutation } from './queries';
+import {
+  useCardsQuery,
+  useCollectionsQuery,
+  useCreateCardMutation,
+  useCreateCollectionMutation,
+} from './queries';
 
 jest.mock('@/src/services/api/cardsClient');
 jest.mock('@/src/services/api/collectionsClient');
@@ -43,6 +48,39 @@ describe('useCardsQuery', () => {
     (listCards as jest.Mock).mockRejectedValue(new Error('network down'));
 
     const { result } = await renderHook(() => useCardsQuery(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useCreateCardMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls createCard and resolves with the created card', async () => {
+    (createCard as jest.Mock).mockResolvedValue({ id: 1, status: 'pending' });
+
+    const { result } = await renderHook(() => useCreateCardMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ status: 'pending', thumbnail_base64: 'BASE64' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64' });
+    expect(result.current.data).toEqual({ id: 1, status: 'pending' });
+  });
+
+  it('surfaces an error when card creation fails', async () => {
+    (createCard as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useCreateCardMutation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ status: 'pending' });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });

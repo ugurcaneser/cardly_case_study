@@ -7,13 +7,22 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { useCreateCardMutation } from '@/src/services/api/queries';
+import { storeCardImage } from '@/src/services/files/imageStorage';
+import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
+import { getErrorMessage } from '@/src/utils/errors';
 
 export default function CaptureScreen() {
   const step = useCaptureStore((state) => state.step);
   const previewUri = useCaptureStore((state) => state.previewUri);
+  const saveError = useCaptureStore((state) => state.error);
   const setCaptured = useCaptureStore((state) => state.setCaptured);
+  const startSaving = useCaptureStore((state) => state.startSaving);
+  const setError = useCaptureStore((state) => state.setError);
   const reset = useCaptureStore((state) => state.reset);
+
+  const createCardMutation = useCreateCardMutation();
 
   const [isPicking, setIsPicking] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
@@ -56,6 +65,25 @@ export default function CaptureScreen() {
     }
   }
 
+  async function handleSave() {
+    if (!previewUri) {
+      return;
+    }
+    startSaving();
+    try {
+      const stored = await storeCardImage(previewUri);
+      const card = await createCardMutation.mutateAsync({
+        status: 'pending',
+        thumbnail_base64: stored.thumbnailBase64,
+      });
+      await setLocalImageUri(card.id, stored.localUri);
+      reset();
+      router.replace(`/card/${card.id}`);
+    } catch (error) {
+      setError(getErrorMessage(error));
+    }
+  }
+
   function handleClose() {
     reset();
     router.back();
@@ -63,6 +91,44 @@ export default function CaptureScreen() {
 
   function handleRetake() {
     reset();
+  }
+
+  if (step === 'saving') {
+    return (
+      <ThemedView style={styles.container}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.savingText}>Saving…</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (step === 'error') {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText type="subtitle" style={styles.hero}>
+          Couldn&apos;t save this card
+        </ThemedText>
+        {saveError ? <ThemedText style={styles.errorText}>{saveError}</ThemedText> : null}
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
+            onPress={handleSave}
+            accessibilityRole="button">
+            <ThemedText style={styles.primaryButtonText} color="#fff">
+              Retry
+            </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
+            onPress={handleRetake}
+            accessibilityRole="button">
+            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
+              Discard
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    );
   }
 
   if (step === 'captured' && previewUri) {
@@ -79,6 +145,14 @@ export default function CaptureScreen() {
         <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="contain" />
 
         <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
+            onPress={handleSave}
+            accessibilityRole="button">
+            <ThemedText style={styles.primaryButtonText} color="#fff">
+              Save
+            </ThemedText>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.secondaryButton, { borderColor: Colors.tint }]}
             onPress={handleRetake}
@@ -165,6 +239,9 @@ const styles = StyleSheet.create({
     color: '#991B1B',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  savingText: {
+    marginTop: 16,
   },
   buttons: {
     width: '100%',
