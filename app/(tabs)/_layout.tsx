@@ -15,7 +15,11 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           tabBarButton: HapticTab,
-          tabBarShowLabel: false,
+          tabBarShowLabel: true,
+          tabBarActiveTintColor: Colors.primary,
+          tabBarInactiveTintColor: Colors.outline,
+          tabBarLabelStyle: styles.tabLabel,
+          tabBarIconStyle: styles.tabIcon,
           tabBarStyle: styles.tabBar,
           tabBarBackground: () => (
             <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
@@ -60,11 +64,18 @@ const styles = StyleSheet.create({
   // Navigation from auto-reserving the bar's height in each screen's safe
   // content area, and every tab screen's bottom padding (insets.bottom-based)
   // already assumes that reservation. Explicit height keeps it predictable
-  // for CaptureTabButton's own floating position above it.
+  // for CaptureTabButton's own floating position above it (kept in sync
+  // there via TAB_BAR_CONTENT_HEIGHT).
   tabBar: {
-    height: 64,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
+    height: 76,
+    borderTopWidth: 0,
     backgroundColor: 'transparent',
+  },
+  tabIcon: {
+    marginBottom: 6,
+  },
+  tabLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11,
   },
 });

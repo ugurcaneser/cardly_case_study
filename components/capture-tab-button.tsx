@@ -10,7 +10,7 @@ import { Colors, Radii } from '@/constants/theme';
 // Matches the explicit height set on the tab bar in app/(tabs)/_layout.tsx —
 // kept in sync there since this button floats independently above it rather
 // than being one of its icons.
-const TAB_BAR_CONTENT_HEIGHT = 64;
+const TAB_BAR_CONTENT_HEIGHT = 76;
 const GAP_ABOVE_TAB_BAR = 20;
 
 /**
