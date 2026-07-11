@@ -1,8 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
+import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -188,33 +190,37 @@ export default function CaptureScreen() {
 
   if (step === 'reviewing' && enrichResult) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="subtitle" style={styles.hero}>
-          {enrichResult.status === 'matched' ? enrichResult.match.name : 'Card not recognized'}
-        </ThemedText>
-        <ThemedText style={[styles.hintText, { color: Colors.icon }]}>
-          {enrichResult.status === 'matched'
-            ? `${enrichResult.match.setName} · #${enrichResult.match.collectorNumber}`
-            : 'We couldn’t confidently match this card — you can still save it.'}
-        </ThemedText>
-        <View style={styles.buttons}>
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
-            onPress={handleSave}
-            accessibilityRole="button">
-            <ThemedText style={styles.primaryButtonText} color="#fff">
-              Save
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-            onPress={handleRetake}
-            accessibilityRole="button">
-            <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-              Retake
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+      <ThemedView style={styles.reviewingContainer}>
+        <ScrollView contentContainerStyle={styles.reviewingContent}>
+          {enrichResult.status === 'matched' ? (
+            <EnrichmentMatchCard match={enrichResult.match} />
+          ) : (
+            <EnrichmentUnrecognizedCard
+              previewUri={previewUri}
+              ocr={enrichResult.ocr}
+              reason={enrichResult.reason}
+            />
+          )}
+
+          <View style={styles.buttons}>
+            <TouchableOpacity
+              style={[styles.primaryButton, { backgroundColor: Colors.tint }]}
+              onPress={handleSave}
+              accessibilityRole="button">
+              <ThemedText style={styles.primaryButtonText} color="#fff">
+                Save
+              </ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.secondaryButton, { borderColor: Colors.tint }]}
+              onPress={handleRetake}
+              accessibilityRole="button">
+              <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
+                Retake
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </ThemedView>
     );
   }
@@ -305,6 +311,15 @@ export default function CaptureScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  reviewingContainer: {
+    flex: 1,
+  },
+  reviewingContent: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

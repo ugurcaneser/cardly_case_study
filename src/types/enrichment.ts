@@ -15,7 +15,7 @@ export type EnrichMatch = {
   manaCost: string | null;
   typeLine: string;
   oracleText: string | null;
-  imageUrl: string;
+  imageUrl: string | null;
   prices: Record<string, string | null>;
 };
 

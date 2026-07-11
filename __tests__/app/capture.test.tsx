@@ -172,7 +172,7 @@ describe('CaptureScreen', () => {
     await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
 
     expect(enrichCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
-    expect(screen.getByText('Masters 25 · #133')).toBeTruthy();
+    expect(screen.getByText('Masters 25 · #133 · Common')).toBeTruthy();
     expect(useCaptureStore.getState().step).toBe('reviewing');
   });
 
