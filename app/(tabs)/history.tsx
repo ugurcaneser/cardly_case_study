@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CardListItem } from '@/components/card-list-item';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedView } from '@/components/themed-view';
+import { ScreenHeader } from '@/components/ui/screen-header';
+import { Colors, Spacing } from '@/constants/theme';
 import { useCardsQuery } from '@/src/services/api/queries';
 
 export default function HistoryScreen() {
@@ -13,15 +15,17 @@ export default function HistoryScreen() {
 
   if (cardsQuery.isPending) {
     return (
-      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator />
+      <ThemedView style={styles.container}>
+        <ScreenHeader title="History" />
+        <ActivityIndicator style={styles.centered} color={Colors.primary} />
       </ThemedView>
     );
   }
 
   if (cardsQuery.isError) {
     return (
-      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
+      <ThemedView style={styles.container}>
+        <ScreenHeader title="History" />
         <EmptyState
           icon="clock.fill"
           title="Couldn't load history"
@@ -37,7 +41,8 @@ export default function HistoryScreen() {
 
   if (cards.length === 0) {
     return (
-      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
+      <ThemedView style={styles.container}>
+        <ScreenHeader title="History" />
         <EmptyState
           icon="clock.fill"
           title="History is empty."
@@ -51,16 +56,14 @@ export default function HistoryScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenHeader title="History" />
       <FlatList
         data={cards}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
         )}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
-        ]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
       />
     </ThemedView>
   );
@@ -72,10 +75,9 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.containerMargin,
+    gap: Spacing.stackSm,
   },
 });

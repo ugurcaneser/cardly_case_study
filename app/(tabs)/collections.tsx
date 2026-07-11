@@ -8,8 +8,10 @@ import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextInputModal } from '@/components/text-input-modal';
+import { BentoCard } from '@/components/ui/bento-card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/ui/screen-header';
+import { Colors, Spacing } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import { useCollectionsQuery, useCreateCollectionMutation } from '@/src/services/api/queries';
@@ -44,15 +46,17 @@ export default function CollectionsScreen() {
 
   if (collectionsQuery.isPending) {
     return (
-      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator />
+      <ThemedView style={styles.container}>
+        <ScreenHeader title="Collections" />
+        <ActivityIndicator style={styles.centered} color={Colors.primary} />
       </ThemedView>
     );
   }
 
   if (collectionsQuery.isError) {
     return (
-      <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
+      <ThemedView style={styles.container}>
+        <ScreenHeader title="Collections" />
         <EmptyState
           icon="folder.fill"
           title="Couldn't load collections"
@@ -72,36 +76,32 @@ export default function CollectionsScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenHeader title="Collections" />
+
       {collections.length === 0 ? (
-        <ThemedView style={[styles.centered, { paddingTop: insets.top }]}>
-          <EmptyState
-            icon="folder.fill"
-            title="No collections yet."
-            description="Create a collection to start organizing your cards."
-            actionLabel="Create Collection"
-            onAction={openCreateModal}
-          />
-        </ThemedView>
+        <EmptyState
+          icon="folder.fill"
+          title="No collections yet."
+          description="Create a collection to start organizing your cards."
+          actionLabel="Create Collection"
+          onAction={openCreateModal}
+        />
       ) : (
         <FlatList
           data={gridData}
           keyExtractor={(item) => (item.kind === 'create' ? 'create' : String(item.collection.id))}
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={[
-            styles.gridContent,
-            { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
-          ]}
+          contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + 16 }]}
           renderItem={({ item }) =>
             item.kind === 'create' ? (
-              <TouchableOpacity
-                style={[styles.tile, styles.createTile, { borderColor: Colors.tint }]}
-                onPress={openCreateModal}
-                accessibilityRole="button">
-                <IconSymbol name="plus" size={28} color={Colors.tint} />
-                <ThemedText style={[styles.createLabel, { color: Colors.tint }]}>
-                  Create New
-                </ThemedText>
+              <TouchableOpacity style={styles.tileWrapper} onPress={openCreateModal} accessibilityRole="button">
+                <BentoCard style={[styles.tile, styles.createTile]}>
+                  <IconSymbol name="plus" size={26} color={Colors.primary} />
+                  <ThemedText type="titleLg" style={{ color: Colors.primary }}>
+                    Create New
+                  </ThemedText>
+                </BentoCard>
               </TouchableOpacity>
             ) : (
               <CollectionTile
@@ -136,31 +136,31 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   row: {
-    gap: 12,
-    paddingHorizontal: 16,
+    gap: Spacing.gutterBento,
+    paddingHorizontal: Spacing.containerMargin,
   },
   gridContent: {
-    paddingVertical: 16,
-    gap: 12,
+    gap: Spacing.gutterBento,
+    paddingTop: Spacing.stackSm,
+  },
+  // Mirrors CollectionTile's own wrapper/tile shape exactly (same two-layer
+  // flex+aspectRatio-then-BentoCard structure) so the "Create New" tile and
+  // real collection tiles are pixel-identical in size — they previously
+  // used two different structures and rendered as different-sized boxes.
+  tileWrapper: {
+    flex: 1,
+    aspectRatio: 1,
   },
   tile: {
     flex: 1,
-    aspectRatio: 1,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    padding: 12,
   },
   createTile: {
-    borderWidth: 1,
     borderStyle: 'dashed',
-  },
-  createLabel: {
-    fontWeight: '600',
+    borderColor: Colors.outlineVariant,
   },
 });

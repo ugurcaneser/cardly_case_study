@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BentoCard } from '@/components/ui/bento-card';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { Colors, Spacing } from '@/constants/theme';
 import { useCardsQuery, useCollectionsQuery } from '@/src/services/api/queries';
 import { calculateEstimatedValueUsd } from '@/src/utils/cardStats';
@@ -28,13 +29,8 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
-        ]}>
-        <ThemedText type="headlineMd">Cardly</ThemedText>
-
+      <ScreenHeader title="Cardly" />
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <BentoCard style={styles.heroCard}>
           <View style={styles.heroIconRow}>
             <IconSymbol name="camera.fill" size={20} color={Colors.tertiary} />
