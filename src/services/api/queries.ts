@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { createCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
+import { enrichCardImage } from '@/src/services/api/enrichClient';
 import { queryKeys } from '@/src/constants/query-keys';
 import type { CardCreateInput } from '@/src/types/card';
 import type { CollectionCreateInput } from '@/src/types/collection';
@@ -18,6 +19,12 @@ export function useCreateCardMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cards });
     },
+  });
+}
+
+export function useEnrichMutation() {
+  return useMutation({
+    mutationFn: (localUri: string) => enrichCardImage(localUri),
   });
 }
 

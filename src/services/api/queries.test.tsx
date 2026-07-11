@@ -5,16 +5,19 @@ import React from 'react';
 
 import { createCard, listCards } from '@/src/services/api/cardsClient';
 import { createCollection, listCollections } from '@/src/services/api/collectionsClient';
+import { enrichCardImage } from '@/src/services/api/enrichClient';
 
 import {
   useCardsQuery,
   useCollectionsQuery,
   useCreateCardMutation,
   useCreateCollectionMutation,
+  useEnrichMutation,
 } from './queries';
 
 jest.mock('@/src/services/api/cardsClient');
 jest.mock('@/src/services/api/collectionsClient');
+jest.mock('@/src/services/api/enrichClient');
 
 // Retries are disabled here so failure tests don't have to wait through the
 // app's real retry/backoff policy — that policy itself is covered separately
@@ -81,6 +84,36 @@ describe('useCreateCardMutation', () => {
     });
 
     result.current.mutate({ status: 'pending' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useEnrichMutation', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('calls enrichCardImage with the local image URI and resolves with the result', async () => {
+    const matched = { status: 'matched', ocr: {}, match: {}, timing: {} };
+    (enrichCardImage as jest.Mock).mockResolvedValue(matched);
+
+    const { result } = await renderHook(() => useEnrichMutation(), { wrapper: createWrapper() });
+
+    result.current.mutate('file:///cards/card-1.jpg');
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(enrichCardImage).toHaveBeenCalledWith('file:///cards/card-1.jpg');
+    expect(result.current.data).toEqual(matched);
+  });
+
+  it('surfaces an error when enrichment fails', async () => {
+    (enrichCardImage as jest.Mock).mockRejectedValue(new Error('OCR provider error'));
+
+    const { result } = await renderHook(() => useEnrichMutation(), { wrapper: createWrapper() });
+
+    result.current.mutate('file:///cards/card-1.jpg');
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
