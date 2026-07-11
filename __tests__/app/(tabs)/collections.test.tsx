@@ -85,6 +85,24 @@ describe('CollectionsScreen', () => {
     expect(router.push).toHaveBeenCalledWith('/collection/1');
   });
 
+  it('renders correctly with an odd total tile count (Create New + collections)', async () => {
+    // 2 collections + Create New = 3 tiles, an odd number for a 2-column
+    // grid — a lone tile in the last row previously stretched to fill the
+    // whole row (and, via aspectRatio:1, grew just as tall) with no
+    // flex:1 sibling to share it with. A filler cell should keep it sized
+    // the same as every other tile.
+    (listCollections as jest.Mock).mockResolvedValue([
+      { id: 1, name: 'Vintage', created_at: '', updated_at: '', card_count: 2 },
+      { id: 2, name: 'Modern', created_at: '', updated_at: '', card_count: 0 },
+    ]);
+
+    await renderCollections();
+
+    await waitFor(() => expect(screen.getByText('Vintage')).toBeTruthy());
+    expect(screen.getByText('Modern')).toBeTruthy();
+    expect(screen.getByText('Create New')).toBeTruthy();
+  });
+
   it('creates a new collection and closes the modal on success', async () => {
     (listCollections as jest.Mock).mockResolvedValue([]);
     (createCollection as jest.Mock).mockResolvedValue({

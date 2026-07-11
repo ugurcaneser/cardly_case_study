@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CollectionTile } from '@/components/collection-tile';
@@ -18,7 +18,7 @@ import { useCollectionsQuery, useCreateCollectionMutation } from '@/src/services
 import type { Collection } from '@/src/types/collection';
 import { getErrorMessage } from '@/src/utils/errors';
 
-type GridItem = { kind: 'create' } | { kind: 'collection'; collection: Collection };
+type GridItem = { kind: 'create' } | { kind: 'collection'; collection: Collection } | { kind: 'filler' };
 
 export default function CollectionsScreen() {
   const insets = useSafeAreaInsets();
@@ -73,6 +73,13 @@ export default function CollectionsScreen() {
     { kind: 'create' },
     ...collections.map((collection): GridItem => ({ kind: 'collection', collection })),
   ];
+  // A lone item in the last row of a 2-column FlatList has no flex:1 sibling
+  // to share the row with, so it stretches to fill the whole row (and, via
+  // aspectRatio:1, grows just as tall). An invisible filler keeps every row
+  // at exactly 2 cells so real tiles never stretch.
+  if (gridData.length % 2 !== 0) {
+    gridData.push({ kind: 'filler' });
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -89,12 +96,17 @@ export default function CollectionsScreen() {
       ) : (
         <FlatList
           data={gridData}
-          keyExtractor={(item) => (item.kind === 'create' ? 'create' : String(item.collection.id))}
+          keyExtractor={(item, index) =>
+            item.kind === 'collection' ? String(item.collection.id) : `${item.kind}-${index}`
+          }
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + 16 }]}
-          renderItem={({ item }) =>
-            item.kind === 'create' ? (
+          renderItem={({ item }) => {
+            if (item.kind === 'filler') {
+              return <View style={styles.tileWrapper} />;
+            }
+            return item.kind === 'create' ? (
               <TouchableOpacity style={styles.tileWrapper} onPress={openCreateModal} accessibilityRole="button">
                 <BentoCard style={[styles.tile, styles.createTile]}>
                   <IconSymbol name="plus" size={26} color={Colors.primary} />
@@ -108,8 +120,8 @@ export default function CollectionsScreen() {
                 collection={item.collection}
                 onPress={() => router.push(`/collection/${item.collection.id}`)}
               />
-            )
-          }
+            );
+          }}
         />
       )}
 
