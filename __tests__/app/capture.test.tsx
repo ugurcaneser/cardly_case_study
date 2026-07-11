@@ -82,8 +82,9 @@ async function captureAPhoto() {
     assets: [{ uri: 'file:///tmp/photo.jpg' }],
   });
 
-  await renderCaptureScreen();
+  const result = await renderCaptureScreen();
   await fireEvent.press(screen.getByText('Take Photo'));
+  return result;
 }
 
 describe('CaptureScreen', () => {
@@ -170,12 +171,14 @@ describe('CaptureScreen', () => {
     expect(useCaptureStore.getState().step).toBe('idle');
   });
 
-  it('resets the store and navigates back when closed', async () => {
-    await renderCaptureScreen();
-    await fireEvent.press(screen.getByLabelText('Close'));
+  it('resets the store on unmount, since the native modal gesture is the only way to close it', async () => {
+    const { unmount } = await captureAPhoto();
+    expect(useCaptureStore.getState().step).toBe('captured');
 
-    expect(router.back).toHaveBeenCalledTimes(1);
+    await act(async () => unmount());
+
     expect(useCaptureStore.getState().step).toBe('idle');
+    expect(useCaptureStore.getState().previewUri).toBeNull();
   });
 
   it('analyzes the card and shows the matched review view', async () => {

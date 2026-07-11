@@ -8,7 +8,6 @@ import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
 import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { GlassIconButton } from '@/components/ui/glass-icon-button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { SecondaryButton } from '@/components/ui/secondary-button';
@@ -49,6 +48,13 @@ export default function CaptureScreen() {
   const [isPicking, setIsPicking] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
   const [isColdStartSevere, setIsColdStartSevere] = useState(false);
+
+  // No in-screen close button — the native modal swipe-down/back gesture is
+  // the only way out, so state must reset on unmount regardless of how the
+  // screen closes, or the next capture would open showing this one's photo.
+  useEffect(() => {
+    return () => reset();
+  }, [reset]);
 
   useEffect(() => {
     if (step !== 'submitting') {
@@ -141,11 +147,6 @@ export default function CaptureScreen() {
     }
   }
 
-  function handleClose() {
-    reset();
-    router.back();
-  }
-
   function handleRetake() {
     reset();
   }
@@ -236,18 +237,11 @@ export default function CaptureScreen() {
   if (step === 'captured' && previewUri) {
     return (
       <ThemedView style={[styles.container, containerInsetStyle]}>
-        <GlassIconButton
-          onPress={handleClose}
-          accessibilityLabel="Close"
-          style={[styles.closeButton, { top: insets.top + 16 }]}>
-          <IconSymbol name="xmark" size={22} color={Colors.onSurface} />
-        </GlassIconButton>
-
         <View style={styles.previewFrame}>
-          <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="contain" />
+          <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="cover" />
         </View>
 
-        <View style={styles.actions}>
+        <View style={styles.buttons}>
           <PrimaryButton label="Analyze Card" onPress={handleAnalyze} />
           <SecondaryButton label="Retake" onPress={handleRetake} />
         </View>
@@ -257,13 +251,6 @@ export default function CaptureScreen() {
 
   return (
     <ThemedView style={[styles.container, containerInsetStyle]}>
-      <GlassIconButton
-        onPress={handleClose}
-        accessibilityLabel="Close"
-        style={[styles.closeButton, { top: insets.top + 16 }]}>
-        <IconSymbol name="xmark" size={22} color={Colors.onSurface} />
-      </GlassIconButton>
-
       <View style={styles.hero}>
         <IconSymbol name="camera.fill" size={44} color={Colors.tertiary} />
         <ThemedText type="headlineMd">Scan a Card</ThemedText>
@@ -310,11 +297,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.containerMargin,
     gap: Spacing.stackMd,
   },
-  closeButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
   hero: {
     alignItems: 'center',
     gap: Spacing.stackSm,
@@ -336,7 +318,7 @@ const styles = StyleSheet.create({
   },
   buttons: {
     width: '100%',
-    gap: Spacing.stackSm,
+    gap: Spacing.stackMd,
   },
   tertiaryButtonText: {
     textAlign: 'center',
@@ -358,8 +340,5 @@ const styles = StyleSheet.create({
   preview: {
     width: '100%',
     height: '100%',
-  },
-  actions: {
-    width: '100%',
   },
 });
