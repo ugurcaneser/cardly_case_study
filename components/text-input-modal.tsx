@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
+import { PrimaryButton } from '@/components/ui/primary-button';
+import { Colors, Radii, Spacing } from '@/constants/theme';
 
 type TextInputModalProps = {
   visible: boolean;
@@ -51,31 +51,35 @@ export function TextInputModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
-        <ThemedView style={[styles.card, { borderColor: Colors.icon }]}>
-          <ThemedText type="subtitle">{title}</ThemedText>
+        <View style={styles.card}>
+          <ThemedText type="headlineSm">{title}</ThemedText>
           <TextInput
-            style={[styles.input, { borderColor: Colors.icon, color: Colors.text }]}
+            style={styles.input}
             placeholder={placeholder}
-            placeholderTextColor={Colors.icon}
+            placeholderTextColor={Colors.onSurfaceVariant}
             value={value}
             onChangeText={setValue}
             autoFocus
           />
-          {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
+          {errorMessage ? (
+            <ThemedText type="bodyMd" style={[styles.errorText, { color: Colors.error }]}>
+              {errorMessage}
+            </ThemedText>
+          ) : null}
           <View style={styles.actions}>
-            <TouchableOpacity onPress={onCancel} accessibilityRole="button">
-              <ThemedText>Cancel</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
+            <PrimaryButton
+              label={isSubmitting ? (submittingLabel ?? confirmLabel) : confirmLabel}
               onPress={handleConfirm}
               disabled={isSubmitting || !value.trim()}
-              accessibilityRole="button">
-              <ThemedText style={[styles.confirmLabel, { color: Colors.tint }]}>
-                {isSubmitting ? (submittingLabel ?? confirmLabel) : confirmLabel}
-              </ThemedText>
-            </TouchableOpacity>
+            />
+            <ThemedText
+              type="titleLg"
+              style={[styles.cancelText, { color: Colors.onSurfaceVariant }]}
+              onPress={onCancel}>
+              Cancel
+            </ThemedText>
           </View>
-        </ThemedView>
+        </View>
       </View>
     </Modal>
   );
@@ -84,35 +88,40 @@ export function TextInputModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: Spacing.containerMargin,
   },
   card: {
     width: '100%',
-    borderRadius: 16,
+    backgroundColor: Colors.surfaceContainer,
+    borderRadius: Radii.xl,
     borderWidth: 1,
+    borderColor: Colors.glassBorder,
     padding: 20,
-    gap: 12,
+    gap: Spacing.stackMd,
   },
   input: {
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: Radii.lg,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: Colors.outlineVariant,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 16,
+    color: Colors.onSurface,
   },
   errorText: {
-    color: Colors.error,
-    fontSize: 13,
+    marginTop: -4,
   },
   actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 24,
+    gap: Spacing.stackSm,
     marginTop: 4,
   },
-  confirmLabel: {
-    fontWeight: '600',
+  cancelText: {
+    textAlign: 'center',
+    paddingVertical: 10,
   },
 });
