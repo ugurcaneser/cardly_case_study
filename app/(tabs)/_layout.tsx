@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -42,6 +42,18 @@ export default function TabLayout() {
         options={{
           title: 'Scan',
           tabBarIcon: ({ focused }) => <TabIcon name="camera.fill" focused={focused} />,
+        }}
+        listeners={{
+          // Intercept the press instead of actually switching to this tab —
+          // this route's own screen just redirects straight back to
+          // /capture, which (since /capture lives in the root stack, not
+          // this tab's own stack) turns closing the modal into a redirect
+          // loop back into itself. Pushing /capture directly here means the
+          // "scan" screen never actually mounts during normal use.
+          tabPress: (event) => {
+            event.preventDefault();
+            router.push('/capture');
+          },
         }}
       />
       <Tabs.Screen

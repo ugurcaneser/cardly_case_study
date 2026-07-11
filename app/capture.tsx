@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { EnrichmentMatchCard } from '@/components/enrichment-match-card';
 import { EnrichmentUnrecognizedCard } from '@/components/enrichment-unrecognized-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { GlassIconButton } from '@/components/ui/glass-icon-button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { SecondaryButton } from '@/components/ui/secondary-button';
@@ -49,9 +50,10 @@ export default function CaptureScreen() {
   const [pickError, setPickError] = useState<string | null>(null);
   const [isColdStartSevere, setIsColdStartSevere] = useState(false);
 
-  // No in-screen close button — the native modal swipe-down/back gesture is
-  // the only way out, so state must reset on unmount regardless of how the
-  // screen closes, or the next capture would open showing this one's photo.
+  // The close button calls router.back() only — state still resets on
+  // unmount regardless of dismissal path (this button, Android back, or a
+  // native swipe gesture), so the next capture never opens showing this
+  // one's photo.
   useEffect(() => {
     return () => reset();
   }, [reset]);
@@ -151,10 +153,20 @@ export default function CaptureScreen() {
     reset();
   }
 
+  function handleClose() {
+    router.back();
+  }
+
   const containerInsetStyle = { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 };
 
+  let content: ReactNode;
+  // The close button is only offered on the two steps where nothing is
+  // in flight (idle and captured-but-not-yet-analyzed) — once analysis or
+  // saving has started, "Discard"/"Retake" are the deliberate exits instead.
+  let showCloseButton = false;
+
   if (step === 'saving') {
-    return (
+    content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <ActivityIndicator size="large" color={Colors.primary} />
         <ThemedText type="bodyLg" style={styles.savingText}>
@@ -162,10 +174,8 @@ export default function CaptureScreen() {
         </ThemedText>
       </ThemedView>
     );
-  }
-
-  if (step === 'error') {
-    return (
+  } else if (step === 'error') {
+    content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <ThemedText type="headlineSm" style={styles.hero}>
           Couldn&apos;t analyze this card
@@ -187,10 +197,8 @@ export default function CaptureScreen() {
         </View>
       </ThemedView>
     );
-  }
-
-  if (step === 'submitting') {
-    return (
+  } else if (step === 'submitting') {
+    content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <ActivityIndicator size="large" color={Colors.primary} />
         <ThemedText type="bodyLg" style={styles.savingText}>
@@ -205,10 +213,8 @@ export default function CaptureScreen() {
         ) : null}
       </ThemedView>
     );
-  }
-
-  if (step === 'reviewing' && enrichResult) {
-    return (
+  } else if (step === 'reviewing' && enrichResult) {
+    content = (
       <ThemedView style={styles.reviewingContainer}>
         <ScrollView
           contentContainerStyle={[
@@ -232,10 +238,9 @@ export default function CaptureScreen() {
         </ScrollView>
       </ThemedView>
     );
-  }
-
-  if (step === 'captured' && previewUri) {
-    return (
+  } else if (step === 'captured' && previewUri) {
+    showCloseButton = true;
+    content = (
       <ThemedView style={[styles.container, containerInsetStyle]}>
         <View style={styles.previewFrame}>
           <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="cover" />
@@ -247,40 +252,64 @@ export default function CaptureScreen() {
         </View>
       </ThemedView>
     );
+  } else {
+    showCloseButton = true;
+    content = (
+      <ThemedView style={[styles.container, containerInsetStyle]}>
+        <View style={styles.hero}>
+          <IconSymbol name="camera.fill" size={44} color={Colors.tertiary} />
+          <ThemedText type="headlineMd">Scan a Card</ThemedText>
+          <ThemedText type="bodyMd" style={[styles.subtitle, { color: Colors.onSurfaceVariant }]}>
+            Take a photo or choose one from your library.
+          </ThemedText>
+        </View>
+
+        {pickError ? (
+          <ThemedText type="bodyMd" style={[styles.errorText, { color: Colors.error }]}>
+            {pickError}
+          </ThemedText>
+        ) : null}
+
+        <View style={styles.buttons}>
+          <PrimaryButton
+            label="Take Photo"
+            onPress={handleTakePhoto}
+            disabled={isPicking}
+            icon={<IconSymbol name="camera.fill" size={18} color={Colors.onPrimary} />}
+          />
+          <SecondaryButton label="Choose from Library" onPress={handleChooseFromLibrary} disabled={isPicking} />
+        </View>
+
+        {isPicking ? <ActivityIndicator style={styles.loadingIndicator} color={Colors.primary} /> : null}
+      </ThemedView>
+    );
   }
 
   return (
-    <ThemedView style={[styles.container, containerInsetStyle]}>
-      <View style={styles.hero}>
-        <IconSymbol name="camera.fill" size={44} color={Colors.tertiary} />
-        <ThemedText type="headlineMd">Scan a Card</ThemedText>
-        <ThemedText type="bodyMd" style={[styles.subtitle, { color: Colors.onSurfaceVariant }]}>
-          Take a photo or choose one from your library.
-        </ThemedText>
-      </View>
-
-      {pickError ? (
-        <ThemedText type="bodyMd" style={[styles.errorText, { color: Colors.error }]}>
-          {pickError}
-        </ThemedText>
+    <View style={styles.root}>
+      {content}
+      {showCloseButton ? (
+        <GlassIconButton
+          onPress={handleClose}
+          style={[styles.closeButton, { top: insets.top + 12 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Close">
+          <IconSymbol name="xmark" size={20} color={Colors.onSurface} />
+        </GlassIconButton>
       ) : null}
-
-      <View style={styles.buttons}>
-        <PrimaryButton
-          label="Take Photo"
-          onPress={handleTakePhoto}
-          disabled={isPicking}
-          icon={<IconSymbol name="camera.fill" size={18} color={Colors.onPrimary} />}
-        />
-        <SecondaryButton label="Choose from Library" onPress={handleChooseFromLibrary} disabled={isPicking} />
-      </View>
-
-      {isPicking ? <ActivityIndicator style={styles.loadingIndicator} color={Colors.primary} /> : null}
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    left: Spacing.containerMargin,
+    zIndex: 10,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
