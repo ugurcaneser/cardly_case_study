@@ -3,7 +3,6 @@ import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardListItem } from '@/components/card-list-item';
-import { FAB_CLEARANCE_ABOVE_TAB_BAR } from '@/components/capture-tab-button';
 import { EmptyState } from '@/components/empty-state';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { ThemedView } from '@/components/themed-view';
@@ -64,10 +63,7 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
         )}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + FAB_CLEARANCE_ABOVE_TAB_BAR },
-        ]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
       />
     </ThemedView>
   );

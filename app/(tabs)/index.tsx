@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FAB_CLEARANCE_ABOVE_TAB_BAR } from '@/components/capture-tab-button';
 import { RecentCardTile } from '@/components/recent-card-tile';
 import { StatTile } from '@/components/stat-tile';
 import { ThemedText } from '@/components/themed-text';
@@ -31,11 +30,7 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader title="Cardly" />
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: insets.bottom + FAB_CLEARANCE_ABOVE_TAB_BAR },
-        ]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <BentoCard style={styles.heroCard}>
           <View style={styles.heroIconRow}>
             <IconSymbol name="camera.fill" size={20} color={Colors.tertiary} />

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FAB_CLEARANCE_ABOVE_TAB_BAR } from '@/components/capture-tab-button';
 import { CollectionTile } from '@/components/collection-tile';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
@@ -102,10 +101,7 @@ export default function CollectionsScreen() {
           }
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={[
-            styles.gridContent,
-            { paddingBottom: insets.bottom + FAB_CLEARANCE_ABOVE_TAB_BAR },
-          ]}
+          contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + 16 }]}
           renderItem={({ item }) => {
             if (item.kind === 'filler') {
               return <View style={styles.tileWrapper} />;
