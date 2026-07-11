@@ -17,10 +17,20 @@ export function StatTile({ emoji, value, label, onPress }: StatTileProps) {
       <View style={styles.iconCircle}>
         <Text style={styles.emoji}>{emoji}</Text>
       </View>
-      <ThemedText type="headlineSm" style={styles.value}>
+      <ThemedText
+        type="headlineSm"
+        style={styles.value}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}>
         {value}
       </ThemedText>
-      <ThemedText type="labelMd" style={{ color: Colors.onSurfaceVariant }}>
+      <ThemedText
+        type="labelMd"
+        style={[styles.label, { color: Colors.onSurfaceVariant }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}>
         {label}
       </ThemedText>
     </BentoCard>
@@ -65,5 +75,10 @@ const styles = StyleSheet.create({
   value: {
     marginTop: 4,
     textAlign: 'center',
+    width: '100%',
+  },
+  label: {
+    textAlign: 'center',
+    width: '100%',
   },
 });
