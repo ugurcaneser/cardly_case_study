@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import React from 'react';
@@ -8,12 +8,7 @@ import { Alert } from 'react-native';
 import CollectionDetailScreen from '@/app/collection/[id]';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
-import {
-  deleteCollection,
-  getCollection,
-  removeCardFromCollection,
-  renameCollection,
-} from '@/src/services/api/collectionsClient';
+import { deleteCollection, getCollection, renameCollection } from '@/src/services/api/collectionsClient';
 import { makeCard } from '@/src/testing/cardFixtures';
 
 jest.mock('expo-router', () => ({
@@ -83,46 +78,6 @@ describe('CollectionDetailScreen', () => {
 
     await fireEvent.press(screen.getByText('Lightning Bolt'));
     expect(router.push).toHaveBeenCalledWith('/card/42');
-  });
-
-  it('removes a card from the collection', async () => {
-    const card = makeCard({ id: 42, matched_name: 'Lightning Bolt' });
-    (getCollection as jest.Mock).mockResolvedValue({
-      id: 1,
-      name: 'Vintage',
-      card_count: 1,
-      cards: [card],
-    });
-    (removeCardFromCollection as jest.Mock).mockResolvedValue({});
-
-    await renderCollectionDetail();
-    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
-
-    await fireEvent.press(screen.getByLabelText('Remove Lightning Bolt from collection'));
-
-    await waitFor(() => expect(removeCardFromCollection).toHaveBeenCalledWith(1, 42));
-    await waitFor(() => expect(getCollection).toHaveBeenCalledTimes(2));
-    expect(track).toHaveBeenCalledWith(AnalyticsEvents.CARD_REMOVED_FROM_COLLECTION, {
-      collectionId: 1,
-      cardId: 42,
-    });
-    // Drain React Query's notifyManager batching (a real setTimeout(0) after
-    // the invalidation-triggered refetch resolves) before the test ends.
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
-  });
-
-  it('falls back to a generic label for the remove action when the card has no name', async () => {
-    const card = makeCard({ id: 42, matched_name: null, ocr_parsed_name: null });
-    (getCollection as jest.Mock).mockResolvedValue({
-      id: 1,
-      name: 'Vintage',
-      card_count: 1,
-      cards: [card],
-    });
-
-    await renderCollectionDetail();
-
-    await waitFor(() => expect(screen.getByLabelText('Remove this card from collection')).toBeTruthy());
   });
 
   it('closes the rename modal without renaming when Cancel is pressed', async () => {

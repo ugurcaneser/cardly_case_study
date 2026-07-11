@@ -8,14 +8,12 @@ import { EmptyState } from '@/components/empty-state';
 import { TextInputModal } from '@/components/text-input-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors, Spacing } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
 import {
   useCollectionQuery,
   useDeleteCollectionMutation,
-  useRemoveCardFromCollectionMutation,
   useRenameCollectionMutation,
 } from '@/src/services/api/queries';
 import type { Card } from '@/src/types/card';
@@ -27,7 +25,6 @@ export default function CollectionDetailScreen() {
   const collectionId = Number(id);
 
   const collectionQuery = useCollectionQuery(collectionId);
-  const removeCardMutation = useRemoveCardFromCollectionMutation();
   const renameCollectionMutation = useRenameCollectionMutation();
   const deleteCollectionMutation = useDeleteCollectionMutation();
 
@@ -114,34 +111,9 @@ export default function CollectionDetailScreen() {
         <FlatList
           data={collection.cards}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }: { item: Card }) => {
-            const cardTitle = item.matched_name ?? item.ocr_parsed_name ?? 'this card';
-            return (
-              <View style={styles.row}>
-                <View style={styles.rowItem}>
-                  <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
-                </View>
-                <TouchableOpacity
-                  onPress={() =>
-                    removeCardMutation.mutate(
-                      { collectionId, cardId: item.id },
-                      {
-                        onSuccess: () =>
-                          track(AnalyticsEvents.CARD_REMOVED_FROM_COLLECTION, {
-                            collectionId,
-                            cardId: item.id,
-                          }),
-                      }
-                    )
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel={`Remove ${cardTitle} from collection`}
-                  hitSlop={8}>
-                  <IconSymbol name="trash" size={18} color={Colors.icon} />
-                </TouchableOpacity>
-              </View>
-            );
-          }}
+          renderItem={({ item }: { item: Card }) => (
+            <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
+          )}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
         />
       )}
@@ -187,13 +159,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.containerMargin,
     paddingTop: Spacing.stackSm,
     gap: Spacing.stackSm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rowItem: {
-    flex: 1,
   },
 });
