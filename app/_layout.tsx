@@ -60,7 +60,7 @@ export default function RootLayout() {
         client={queryClient}
         persistOptions={{ persister: asyncStoragePersister }}>
         <ThemeProvider value={NavigationTheme}>
-          <Stack screenOptions={{ headerBackTitle: ' ' }}>
+          <Stack screenOptions={{ headerBackTitle: ' ', animation: 'none' }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
           </Stack>
           <StatusBar style="light" />
