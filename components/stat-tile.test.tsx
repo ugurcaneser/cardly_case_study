@@ -4,7 +4,7 @@ import { StatTile } from './stat-tile';
 
 describe('StatTile', () => {
   it('renders the value and label', async () => {
-    await render(<StatTile icon="square.stack.fill" value="12" label="Cards" />);
+    await render(<StatTile emoji="🃏" value="12" label="Cards" />);
 
     expect(screen.getByText('12')).toBeTruthy();
     expect(screen.getByText('Cards')).toBeTruthy();

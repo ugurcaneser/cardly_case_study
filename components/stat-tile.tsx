@@ -1,21 +1,20 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { BentoCard } from '@/components/ui/bento-card';
-import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 import { Colors, Radii } from '@/constants/theme';
 
 type StatTileProps = {
-  icon: IconSymbolName;
+  emoji: string;
   value: string;
   label: string;
 };
 
-export function StatTile({ icon, value, label }: StatTileProps) {
+export function StatTile({ emoji, value, label }: StatTileProps) {
   return (
     <BentoCard style={styles.tile}>
       <View style={styles.iconCircle}>
-        <IconSymbol name={icon} size={18} color={Colors.primary} />
+        <Text style={styles.emoji}>{emoji}</Text>
       </View>
       <ThemedText type="headlineSm" style={styles.value}>
         {value}
@@ -32,16 +31,22 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 8,
     padding: 14,
+    alignItems: 'center',
   },
   iconCircle: {
-    width: 32,
-    height: 32,
+    width: 48,
+    height: 48,
     borderRadius: Radii.full,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surfaceContainerHigh,
   },
+  emoji: {
+    fontSize: 26,
+    textAlign: 'center',
+  },
   value: {
     marginTop: 4,
+    textAlign: 'center',
   },
 });

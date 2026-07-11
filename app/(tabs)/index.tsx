@@ -42,13 +42,9 @@ export default function HomeScreen() {
         </BentoCard>
 
         <View style={styles.statsRow}>
-          <StatTile icon="square.stack.fill" value={String(cardCount)} label="Cards" />
-          <StatTile
-            icon="dollarsign.circle.fill"
-            value={`$${estimatedValue.toFixed(2)}`}
-            label="Est. Value"
-          />
-          <StatTile icon="folder.fill" value={String(collectionCount)} label="Collections" />
+          <StatTile emoji="🃏" value={String(cardCount)} label="Cards" />
+          <StatTile emoji="💰" value={`$${estimatedValue.toFixed(2)}`} label="Est. Value" />
+          <StatTile emoji="📚" value={String(collectionCount)} label="Collections" />
         </View>
       </ScrollView>
     </ThemedView>
