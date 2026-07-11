@@ -13,6 +13,7 @@ import { useCreateCardMutation, useEnrichMutation } from '@/src/services/api/que
 import { storeCardImage } from '@/src/services/files/imageStorage';
 import { setLocalImageUri } from '@/src/services/files/localImageMap';
 import { useCaptureStore } from '@/src/store/useCaptureStore';
+import { buildCardCreateInput } from '@/src/utils/buildCardCreateInput';
 import { getErrorMessage } from '@/src/utils/errors';
 
 // Escalates the cold-start hint copy in two stages rather than a single
@@ -113,10 +114,9 @@ export default function CaptureScreen() {
     startSaving();
     try {
       const stored = await storeCardImage(previewUri);
-      const card = await createCardMutation.mutateAsync({
-        status: 'pending',
-        thumbnail_base64: stored.thumbnailBase64,
-      });
+      const card = await createCardMutation.mutateAsync(
+        buildCardCreateInput(stored.thumbnailBase64, enrichResult)
+      );
       await setLocalImageUri(card.id, stored.localUri);
       reset();
       router.replace(`/card/${card.id}`);
@@ -161,11 +161,14 @@ export default function CaptureScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.secondaryButton, { borderColor: Colors.tint }]}
-            onPress={handleRetake}
+            onPress={handleSave}
             accessibilityRole="button">
             <ThemedText style={[styles.secondaryButtonText, { color: Colors.tint }]}>
-              Discard
+              Save without Analysis
             </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tertiaryButton} onPress={handleRetake} accessibilityRole="button">
+            <ThemedText style={[styles.tertiaryButtonText, { color: Colors.icon }]}>Discard</ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -377,6 +380,15 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontWeight: '600',
     fontSize: 16,
+  },
+  tertiaryButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  tertiaryButtonText: {
+    fontWeight: '600',
+    fontSize: 15,
   },
   loadingIndicator: {
     marginTop: 16,

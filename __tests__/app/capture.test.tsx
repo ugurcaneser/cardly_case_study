@@ -185,6 +185,30 @@ describe('CaptureScreen', () => {
     await waitFor(() => expect(screen.getByText('Card not recognized')).toBeTruthy());
   });
 
+  it('saves an unrecognized card with its OCR fields and no matched_* fields', async () => {
+    (enrichCardImage as jest.Mock).mockResolvedValue(unrecognizedResult);
+    (storeCardImage as jest.Mock).mockResolvedValue({
+      localUri: 'file:///document/cards/card-1.jpg',
+      thumbnailBase64: 'BASE64DATA',
+    });
+    (createCard as jest.Mock).mockResolvedValue({ id: 12, status: 'unrecognized' });
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText('Card not recognized')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Save'));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/12'));
+    expect(createCard).toHaveBeenCalledWith({
+      status: 'unrecognized',
+      thumbnail_base64: 'BASE64DATA',
+      raw_ocr_text: null,
+      ocr_parsed_name: null,
+      ocr_parsed_number: null,
+    });
+  });
+
   it('shows an escalating cold-start hint while the submitting step is active', async () => {
     // Drives the step directly through the store rather than via a real
     // Analyze press + pending mutation: fireEvent.press awaits the handler's
@@ -275,8 +299,41 @@ describe('CaptureScreen', () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/7'));
 
     expect(storeCardImage).toHaveBeenCalledWith('file:///tmp/photo.jpg');
-    expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64DATA' });
+    expect(createCard).toHaveBeenCalledWith({
+      status: 'enriched',
+      thumbnail_base64: 'BASE64DATA',
+      raw_ocr_text: 'Lightning Bolt',
+      ocr_parsed_name: 'Lightning Bolt',
+      ocr_parsed_number: null,
+      matched_name: 'Lightning Bolt',
+      matched_set_name: 'Masters 25',
+      matched_set_code: 'a25',
+      matched_collector_number: '133',
+      matched_scryfall_id: 'abc-123',
+      matched_image_url: 'https://example.com/card.jpg',
+      matched_data: matchedResult.match,
+    });
     expect(setLocalImageUri).toHaveBeenCalledWith(7, 'file:///document/cards/card-1.jpg');
     expect(useCaptureStore.getState().step).toBe('idle');
+  });
+
+  it('saves without analysis from the error step and navigates to its detail screen', async () => {
+    (enrichCardImage as jest.Mock).mockRejectedValue(new Error('OCR provider error'));
+    (storeCardImage as jest.Mock).mockResolvedValue({
+      localUri: 'file:///document/cards/card-1.jpg',
+      thumbnailBase64: 'BASE64DATA',
+    });
+    (createCard as jest.Mock).mockResolvedValue({ id: 9, status: 'pending' });
+
+    await captureAPhoto();
+    await fireEvent.press(screen.getByText('Analyze Card'));
+    await waitFor(() => expect(screen.getByText("Couldn't analyze this card")).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Save without Analysis'));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/card/9'));
+
+    expect(createCard).toHaveBeenCalledWith({ status: 'pending', thumbnail_base64: 'BASE64DATA' });
+    expect(setLocalImageUri).toHaveBeenCalledWith(9, 'file:///document/cards/card-1.jpg');
   });
 });
