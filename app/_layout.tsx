@@ -19,8 +19,8 @@ export default function RootLayout() {
         client={queryClient}
         persistOptions={{ persister: asyncStoragePersister }}>
         <ThemeProvider value={DefaultTheme}>
-          <Stack screenOptions={{ headerBackTitle: '' }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerBackTitle: ' ' }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
             <Stack.Screen
               name="capture"
               options={{ presentation: 'modal', headerShown: false }}
