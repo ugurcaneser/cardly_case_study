@@ -1,3 +1,4 @@
+import { getDeviceId } from '@/src/services/device/deviceId';
 import { getApiBaseUrl } from '@/src/utils/platform';
 
 export class ApiError extends Error {
@@ -27,11 +28,13 @@ const DEFAULT_TIMEOUT_MS = 15000;
 export async function apiFetch<T = void>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { method = 'GET', body, headers, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
   const url = `${getApiBaseUrl()}${path}`;
+  const deviceId = await getDeviceId();
 
   const isJsonBody = body !== undefined && !(body instanceof FormData) && typeof body !== 'string';
   const requestInit: RequestInit = {
     method,
     headers: {
+      'X-Device-Id': deviceId,
       ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },

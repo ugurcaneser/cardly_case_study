@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { apiFetch, ApiError } from './client';
 
 function mockJsonResponse(status: number, ok: boolean, body: unknown) {
@@ -10,9 +12,10 @@ function mockJsonResponse(status: number, ok: boolean, body: unknown) {
 }
 
 describe('apiFetch', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     process.env.EXPO_PUBLIC_API_BASE_URL = 'http://test.local';
     global.fetch = jest.fn();
+    await AsyncStorage.clear();
   });
 
   afterEach(() => {
@@ -78,5 +81,18 @@ describe('apiFetch', () => {
     (global.fetch as jest.Mock).mockRejectedValue(abortError);
 
     await expect(apiFetch('/ping')).rejects.toMatchObject({ message: 'Request timed out' });
+  });
+
+  it('attaches the same X-Device-Id header to every request', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(mockJsonResponse(200, true, {}));
+
+    await apiFetch('/cards');
+    await apiFetch('/collections');
+
+    const [, firstInit] = (global.fetch as jest.Mock).mock.calls[0];
+    const [, secondInit] = (global.fetch as jest.Mock).mock.calls[1];
+
+    expect(firstInit.headers['X-Device-Id']).toEqual(expect.any(String));
+    expect(firstInit.headers['X-Device-Id']).toBe(secondInit.headers['X-Device-Id']);
   });
 });

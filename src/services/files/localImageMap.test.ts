@@ -1,12 +1,10 @@
-import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getLocalImageUri, removeLocalImageUri, setLocalImageUri } from './localImageMap';
 
-jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
-
 describe('localImageMap', () => {
   beforeEach(async () => {
-    await mockAsyncStorage.clear();
+    await AsyncStorage.clear();
   });
 
   it('returns null for a card with no stored image', async () => {
