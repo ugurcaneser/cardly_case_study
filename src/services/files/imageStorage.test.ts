@@ -3,6 +3,9 @@ import { storeCardImage } from './imageStorage';
 const mockManipulate = jest.fn();
 const mockDirectoryCreate = jest.fn();
 const mockFileCopy = jest.fn();
+// Mutable so a test can simulate the cards directory already existing -
+// reset in beforeEach so that's opt-in per test, not a leaked global.
+let mockDirectoryExists = false;
 
 jest.mock('expo-image-manipulator', () => ({
   ImageManipulator: { manipulate: (uri: string) => mockManipulate(uri) },
@@ -12,7 +15,9 @@ jest.mock('expo-image-manipulator', () => ({
 jest.mock('expo-file-system', () => {
   class MockDirectory {
     uri = 'file:///document/cards';
-    exists = false;
+    get exists() {
+      return mockDirectoryExists;
+    }
     create(...args: unknown[]) {
       mockDirectoryCreate(...args);
     }
@@ -45,6 +50,7 @@ function mockManipulationStep(width: number, saveResult: { uri: string; width: n
 describe('storeCardImage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDirectoryExists = false;
   });
 
   it('ensures the cards directory exists', async () => {
@@ -64,6 +70,26 @@ describe('storeCardImage', () => {
     await storeCardImage('file:///picked/photo.jpg');
 
     expect(mockDirectoryCreate).toHaveBeenCalledWith({ intermediates: true, idempotent: true });
+  });
+
+  it('does not recreate the cards directory when it already exists', async () => {
+    mockDirectoryExists = true;
+    mockManipulate
+      .mockImplementationOnce(
+        mockManipulationStep(1600, { uri: 'file:///cache/display.jpg', width: 1600, height: 1200 })
+      )
+      .mockImplementationOnce(
+        mockManipulationStep(200, {
+          uri: 'file:///cache/thumb.jpg',
+          width: 200,
+          height: 150,
+          base64: 'BASE64DATA',
+        })
+      );
+
+    await storeCardImage('file:///picked/photo.jpg');
+
+    expect(mockDirectoryCreate).not.toHaveBeenCalled();
   });
 
   it('resizes a 1600px display copy and a 200px thumbnail, persisting the display copy', async () => {

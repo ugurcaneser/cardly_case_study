@@ -35,6 +35,12 @@ describe('CardListItem', () => {
     expect(screen.getByText('Masters 25')).toBeTruthy();
   });
 
+  it('renders the thumbnail image when thumbnail_base64 is present', async () => {
+    const { toJSON } = await render(<CardListItem card={makeCard({ thumbnail_base64: 'BASE64DATA' })} />);
+
+    expect(JSON.stringify(toJSON())).toContain('data:image/jpeg;base64,BASE64DATA');
+  });
+
   it('renders the status badge for the card', async () => {
     await render(<CardListItem card={makeCard({ status: 'enriched' })} />);
 

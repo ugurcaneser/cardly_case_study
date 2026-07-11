@@ -113,6 +113,16 @@ describe('CaptureScreen', () => {
     expect(ImagePicker.launchCameraAsync).not.toHaveBeenCalled();
   });
 
+  it('shows an error and never opens the library when gallery permission is denied', async () => {
+    (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
+
+    await renderCaptureScreen();
+    await fireEvent.press(screen.getByText('Choose from Library'));
+
+    expect(screen.getByText('Photo library access is required to import a card image.')).toBeTruthy();
+    expect(ImagePicker.launchImageLibraryAsync).not.toHaveBeenCalled();
+  });
+
   it('stays on the idle step when the camera picker is canceled', async () => {
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
     (ImagePicker.launchCameraAsync as jest.Mock).mockResolvedValue({ canceled: true, assets: null });

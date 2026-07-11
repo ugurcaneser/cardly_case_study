@@ -41,6 +41,19 @@ describe('CollectionsScreen', () => {
     expect(screen.getByPlaceholderText('Collection name')).toBeTruthy();
   });
 
+  it('closes the create modal without creating anything when Cancel is pressed', async () => {
+    (listCollections as jest.Mock).mockResolvedValue([]);
+
+    await renderCollections();
+    await waitFor(() => expect(screen.getByText('No collections yet.')).toBeTruthy());
+    await fireEvent.press(screen.getByText('Create Collection'));
+
+    await fireEvent.press(screen.getByText('Cancel'));
+
+    expect(screen.queryByPlaceholderText('Collection name')).toBeNull();
+    expect(createCollection).not.toHaveBeenCalled();
+  });
+
   it('shows the error state and retries on demand', async () => {
     (listCollections as jest.Mock).mockRejectedValue(new Error('network down'));
 

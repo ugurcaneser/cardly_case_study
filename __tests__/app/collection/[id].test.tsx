@@ -125,6 +125,19 @@ describe('CollectionDetailScreen', () => {
     await waitFor(() => expect(screen.getByLabelText('Remove this card from collection')).toBeTruthy());
   });
 
+  it('closes the rename modal without renaming when Cancel is pressed', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+    await fireEvent.press(screen.getByText('Rename'));
+
+    await fireEvent.press(screen.getByText('Cancel'));
+
+    expect(screen.queryByDisplayValue('Vintage')).toBeNull();
+    expect(renameCollection).not.toHaveBeenCalled();
+  });
+
   it('renames the collection', async () => {
     (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
     (renameCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Modern', card_count: 0 });

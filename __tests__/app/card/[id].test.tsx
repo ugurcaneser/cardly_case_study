@@ -156,6 +156,9 @@ describe('CardDetailScreen', () => {
     // real setTimeout(0), one tick after the refetch promise itself
     // resolves - flush it here so it lands before cleanup, not after.
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    await fireEvent.press(screen.getByText('Done'));
+    expect(screen.queryByText('Vintage')).toBeNull();
   });
 
   it('deletes the card and navigates back after confirming', async () => {

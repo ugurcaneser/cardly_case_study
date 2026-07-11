@@ -47,4 +47,16 @@ describe('EnrichmentMatchCard', () => {
 
     expect(screen.getByText('Instant')).toBeTruthy();
   });
+
+  it('renders the card image when imageUrl is present', async () => {
+    const { toJSON } = await render(<EnrichmentMatchCard match={baseMatch} />);
+
+    expect(JSON.stringify(toJSON())).toContain('https://example.com/card.jpg');
+  });
+
+  it('omits the image when the match has no imageUrl', async () => {
+    const { toJSON } = await render(<EnrichmentMatchCard match={{ ...baseMatch, imageUrl: null }} />);
+
+    expect(JSON.stringify(toJSON())).not.toContain('https://example.com/card.jpg');
+  });
 });

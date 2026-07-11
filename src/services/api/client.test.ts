@@ -58,4 +58,25 @@ describe('apiFetch', () => {
 
     await expect(apiFetch('/ping')).rejects.toThrow(ApiError);
   });
+
+  it('returns undefined without parsing the body when the response is not JSON', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 204,
+      headers: { get: () => null },
+      json: async () => {
+        throw new Error('should not be called');
+      },
+    } as unknown as Response);
+
+    await expect(apiFetch('/cards/1', { method: 'DELETE' })).resolves.toBeUndefined();
+  });
+
+  it('reports a timeout distinctly from a generic network failure', async () => {
+    const abortError = new Error('Aborted');
+    abortError.name = 'AbortError';
+    (global.fetch as jest.Mock).mockRejectedValue(abortError);
+
+    await expect(apiFetch('/ping')).rejects.toMatchObject({ message: 'Request timed out' });
+  });
 });
