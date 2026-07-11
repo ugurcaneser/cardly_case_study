@@ -7,6 +7,7 @@ import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/c
 import {
   addCardToCollection,
   createCollection,
+  getCollection,
   listCollections,
   removeCardFromCollection,
 } from '@/src/services/api/collectionsClient';
@@ -16,6 +17,7 @@ import {
   useAddCardToCollectionMutation,
   useCardQuery,
   useCardsQuery,
+  useCollectionQuery,
   useCollectionsQuery,
   useCreateCardMutation,
   useCreateCollectionMutation,
@@ -195,6 +197,31 @@ describe('useCollectionsQuery', () => {
 
     expect(result.current.data).toEqual([{ id: 1, name: 'Vintage', card_count: 0 }]);
     expect(listCollections).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useCollectionQuery', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('fetches a single collection with its cards', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 1, cards: [] });
+
+    const { result } = await renderHook(() => useCollectionQuery(1), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(getCollection).toHaveBeenCalledWith(1);
+    expect(result.current.data).toEqual({ id: 1, name: 'Vintage', card_count: 1, cards: [] });
+  });
+
+  it('surfaces an error state when the request fails', async () => {
+    (getCollection as jest.Mock).mockRejectedValue(new Error('not found'));
+
+    const { result } = await renderHook(() => useCollectionQuery(999), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
 

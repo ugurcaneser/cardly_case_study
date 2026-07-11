@@ -1,0 +1,114 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import type { ReactNode } from 'react';
+import React from 'react';
+
+import CollectionDetailScreen from '@/app/collection/[id]';
+import { getCollection, removeCardFromCollection } from '@/src/services/api/collectionsClient';
+import { makeCard } from '@/src/testing/cardFixtures';
+
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useLocalSearchParams: jest.fn(),
+  Stack: { Screen: () => null },
+}));
+
+jest.mock('@/src/services/api/collectionsClient');
+
+function renderCollectionDetail() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  return render(<CollectionDetailScreen />, { wrapper });
+}
+
+describe('CollectionDetailScreen', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: '1' });
+  });
+
+  it('shows a loading indicator while the collection is fetched', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+
+    await renderCollectionDetail();
+
+    expect(screen.getByLabelText('Loading')).toBeTruthy();
+
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+  });
+
+  it('shows an error state and retries on demand', async () => {
+    (getCollection as jest.Mock).mockRejectedValue(new Error('network down'));
+
+    await renderCollectionDetail();
+
+    await waitFor(() => expect(screen.getByText("Couldn't load this collection")).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Retry'));
+    await waitFor(() => expect(getCollection).toHaveBeenCalledTimes(2));
+  });
+
+  it('shows the empty state when the collection has no cards', async () => {
+    (getCollection as jest.Mock).mockResolvedValue({ id: 1, name: 'Vintage', card_count: 0, cards: [] });
+
+    await renderCollectionDetail();
+
+    await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
+  });
+
+  it('renders each card and navigates to its detail screen on press', async () => {
+    const card = makeCard({ id: 42, matched_name: 'Lightning Bolt' });
+    (getCollection as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Vintage',
+      card_count: 1,
+      cards: [card],
+    });
+
+    await renderCollectionDetail();
+
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
+    await fireEvent.press(screen.getByText('Lightning Bolt'));
+    expect(router.push).toHaveBeenCalledWith('/card/42');
+  });
+
+  it('removes a card from the collection', async () => {
+    const card = makeCard({ id: 42, matched_name: 'Lightning Bolt' });
+    (getCollection as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Vintage',
+      card_count: 1,
+      cards: [card],
+    });
+    (removeCardFromCollection as jest.Mock).mockResolvedValue({});
+
+    await renderCollectionDetail();
+    await waitFor(() => expect(screen.getByText('Lightning Bolt')).toBeTruthy());
+
+    await fireEvent.press(screen.getByLabelText('Remove Lightning Bolt from collection'));
+
+    await waitFor(() => expect(removeCardFromCollection).toHaveBeenCalledWith(1, 42));
+    await waitFor(() => expect(getCollection).toHaveBeenCalledTimes(2));
+    // Drain React Query's notifyManager batching (a real setTimeout(0) after
+    // the invalidation-triggered refetch resolves) before the test ends.
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+  });
+
+  it('falls back to a generic label for the remove action when the card has no name', async () => {
+    const card = makeCard({ id: 42, matched_name: null, ocr_parsed_name: null });
+    (getCollection as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Vintage',
+      card_count: 1,
+      cards: [card],
+    });
+
+    await renderCollectionDetail();
+
+    await waitFor(() => expect(screen.getByLabelText('Remove this card from collection')).toBeTruthy());
+  });
+});

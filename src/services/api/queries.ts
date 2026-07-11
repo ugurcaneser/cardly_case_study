@@ -4,6 +4,7 @@ import { createCard, deleteCard, getCard, listCards } from '@/src/services/api/c
 import {
   addCardToCollection,
   createCollection,
+  getCollection,
   listCollections,
   removeCardFromCollection,
 } from '@/src/services/api/collectionsClient';
@@ -52,6 +53,10 @@ export function useCollectionsQuery() {
   return useQuery({ queryKey: queryKeys.collections, queryFn: listCollections });
 }
 
+export function useCollectionQuery(id: number) {
+  return useQuery({ queryKey: queryKeys.collection(id), queryFn: () => getCollection(id) });
+}
+
 export function useCreateCollectionMutation() {
   const queryClient = useQueryClient();
 
@@ -69,9 +74,12 @@ export function useAddCardToCollectionMutation() {
   return useMutation({
     mutationFn: ({ collectionId, cardId }: { collectionId: number; cardId: number }) =>
       addCardToCollection(collectionId, cardId),
-    onSuccess: (_data, { collectionId }) => {
+    // queryKeys.collections (['collections']) already prefix-matches every
+    // queryKeys.collection(id) (['collections', id]) under React Query's
+    // default non-exact invalidation, so a second explicit invalidate call
+    // would just trigger a redundant duplicate refetch.
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.collections });
-      queryClient.invalidateQueries({ queryKey: queryKeys.collection(collectionId) });
     },
   });
 }
@@ -82,9 +90,8 @@ export function useRemoveCardFromCollectionMutation() {
   return useMutation({
     mutationFn: ({ collectionId, cardId }: { collectionId: number; cardId: number }) =>
       removeCardFromCollection(collectionId, cardId),
-    onSuccess: (_data, { collectionId }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.collections });
-      queryClient.invalidateQueries({ queryKey: queryKeys.collection(collectionId) });
     },
   });
 }
