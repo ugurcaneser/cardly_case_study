@@ -11,7 +11,13 @@ import { Colors, Radii } from '@/constants/theme';
 // kept in sync there since this button floats independently above it rather
 // than being one of its icons.
 const TAB_BAR_CONTENT_HEIGHT = 76;
-const GAP_ABOVE_TAB_BAR = 20;
+const GAP_ABOVE_TAB_BAR = 12;
+const FAB_SIZE = 60;
+
+// How far the FAB's top edge sits above the tab-bar-reserved content area —
+// list/scroll screens need at least this much of their own bottom padding
+// (on top of insets.bottom) so their last item never renders underneath it.
+export const FAB_CLEARANCE_ABOVE_TAB_BAR = GAP_ABOVE_TAB_BAR + FAB_SIZE;
 
 /**
  * A floating action button rendered above the tab bar — not one of its
@@ -49,8 +55,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   fab: {
-    width: 60,
-    height: 60,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
     borderRadius: Radii.full,
     alignItems: 'center',
     justifyContent: 'center',

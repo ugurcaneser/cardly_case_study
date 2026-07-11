@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardListItem } from '@/components/card-list-item';
@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/empty-state';
 import { TextInputModal } from '@/components/text-input-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { SecondaryButton } from '@/components/ui/secondary-button';
 import { Colors, Spacing } from '@/constants/theme';
 import { AnalyticsEvents } from '@/src/constants/analytics-events';
 import { track } from '@/src/services/analytics/logger';
@@ -92,15 +93,6 @@ export default function CollectionDetailScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: collection.name }} />
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity onPress={openRenameModal} accessibilityRole="button">
-          <ThemedText style={[styles.actionText, { color: Colors.tint }]}>Rename</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleDelete} accessibilityRole="button">
-          <ThemedText style={[styles.actionText, { color: Colors.error }]}>Delete Collection</ThemedText>
-        </TouchableOpacity>
-      </View>
-
       {collection.cards.length === 0 ? (
         <EmptyState
           icon="folder.fill"
@@ -109,14 +101,25 @@ export default function CollectionDetailScreen() {
         />
       ) : (
         <FlatList
+          style={styles.list}
           data={collection.cards}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }: { item: Card }) => (
             <CardListItem card={item} onPress={() => router.push(`/card/${item.id}`)} />
           )}
-          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
+          contentContainerStyle={styles.listContent}
         />
       )}
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.stackSm }]}>
+        <SecondaryButton label="Rename Collection" onPress={openRenameModal} />
+        <ThemedText
+          type="titleLg"
+          style={[styles.deleteText, { color: Colors.error }]}
+          onPress={handleDelete}>
+          Delete Collection
+        </ThemedText>
+      </View>
 
       <TextInputModal
         visible={isRenameModalVisible}
@@ -145,19 +148,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerMargin,
-    paddingTop: 12,
-  },
-  actionText: {
-    fontWeight: '600',
-    fontSize: 14,
+  list: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: Spacing.containerMargin,
     paddingTop: Spacing.stackSm,
     gap: Spacing.stackSm,
+  },
+  footer: {
+    paddingHorizontal: Spacing.containerMargin,
+    paddingTop: Spacing.stackSm,
+    gap: Spacing.stackSm,
+  },
+  deleteText: {
+    textAlign: 'center',
+    paddingVertical: 10,
   },
 });

@@ -85,7 +85,7 @@ describe('CollectionDetailScreen', () => {
 
     await renderCollectionDetail();
     await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
-    await fireEvent.press(screen.getByText('Rename'));
+    await fireEvent.press(screen.getByText('Rename Collection'));
 
     await fireEvent.press(screen.getByText('Cancel'));
 
@@ -100,7 +100,7 @@ describe('CollectionDetailScreen', () => {
     await renderCollectionDetail();
     await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
 
-    await fireEvent.press(screen.getByText('Rename'));
+    await fireEvent.press(screen.getByText('Rename Collection'));
     expect(screen.getByDisplayValue('Vintage')).toBeTruthy();
 
     await fireEvent.changeText(screen.getByDisplayValue('Vintage'), 'Modern');
@@ -121,7 +121,7 @@ describe('CollectionDetailScreen', () => {
     await renderCollectionDetail();
     await waitFor(() => expect(screen.getByText('No cards yet.')).toBeTruthy());
 
-    await fireEvent.press(screen.getByText('Rename'));
+    await fireEvent.press(screen.getByText('Rename Collection'));
     await fireEvent.press(screen.getByText('Save'));
 
     await waitFor(() => expect(screen.getByText('Collection name already exists')).toBeTruthy());
